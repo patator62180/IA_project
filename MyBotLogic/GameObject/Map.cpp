@@ -42,23 +42,28 @@ void Map::updateHexes(const TurnInfo& ti) noexcept
     for (auto tile : ti.tiles) {
         auto& hex = getHexByID(tile.second.tileID);
         hex.type = tile.second.tileType;
-        connectHex(hex);
     }
+
+    connectHex(ti);
 }
 
-void Map::connectHex(Hex& hex) noexcept
+void Map::connectHex(const TurnInfo& ti) noexcept
 {
-    for (auto i = 0; i < Hex::EDGES_COUNT; ++i)
-    {
-        auto direction = static_cast<HexDirection>(i);
-        auto result = isWorthAdding(hex, direction);
-        if (result.first && !hex.edges[direction].isBlocked) {
-            hex.edges[direction] = Edge{result.second, direction, !isHexAvailable(result.second) };
-        }
-        else {
-            hex.edges[direction].isBlocked = true;
+    for (auto tile : ti.tiles) {
+        auto& hex = getHexByID(tile.second.tileID);
+        for (auto i = 0; i < Hex::EDGES_COUNT; ++i)
+        {
+            auto direction = static_cast<HexDirection>(i);
+            auto result = isWorthAdding(hex, direction);
+            if (result.first && !hex.edges[direction].isBlocked) {
+                hex.edges[direction] = Edge{ result.second, direction, !isHexAvailable(result.second) };
+            }
+            else {
+                hex.edges[direction].isBlocked = true;
+            }
         }
     }
+
 }
 
 void Map::updateObjects(const TurnInfo& li) noexcept {

@@ -31,6 +31,7 @@ struct Record {
     }
 };
 
+// sort ascending
 struct AStarCompare {
     bool operator()(Record* l, Record* r) const noexcept {
         if (l->hexID == r->hexID)
@@ -40,6 +41,7 @@ struct AStarCompare {
     }
 };
 
+// sort descending...?
 //struct AStarCompare {
 //    bool operator()(Record* l, Record* r) const noexcept {
 //        if (l->hexID == r->hexID)
@@ -50,14 +52,5 @@ struct AStarCompare {
 //};
 
 using AStarRecord = std::set<Record*, AStarCompare>;
-
-//struct AStarCompare {
-//    bool operator()(Record* l, Record* r) const noexcept {
-//        if (l->hexID == r->hexID)
-//            return l->score < r->score;
-//
-//        return l->hexID > r->hexID;
-//    }
-//};
 
 #endif // RECORD_H
