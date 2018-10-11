@@ -116,4 +116,5 @@ struct Interact : Action
 
 	unsigned int objectID;
 	EInteraction interaction;
+
 };
