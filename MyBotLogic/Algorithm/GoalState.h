@@ -25,12 +25,12 @@ class GoalState
 public:
     std::map<unsigned int, GoalInfo> npcsGoalInfo;
 
-    const HexDirection Update(Npc&);
+    const Movement Update(Npc&);
 
     GoalState() = default;
     ~GoalState() = default;
 private:
-    const HexDirection getNextValidMovement(Npc&);
+    const Movement getNextValidMovement(Npc&);
 };
 
 #endif // GOAL_STATE_H

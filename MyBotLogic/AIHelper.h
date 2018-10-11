@@ -7,12 +7,11 @@
 #include "GameObject/Npc.h"
 #include "Algorithm/GoalState.h"
 #include "Algorithm/ExploreState.h"
+#include "Algorithm/BlackBoard.h"
 
 #include <vector>
 #include <set>
 #include <map>
-
-using GoalHexIDs = std::set<unsigned int>;
 
 class AIHelper
 {
@@ -21,17 +20,17 @@ private:
 
     GoalState goalState; // remove -> behaviour tree
     ExploreState exploreState; //remove -> behaviour tree
-    GoalHexIDs goalHexIDs;
     std::set<unsigned int> npcsCurrentHexID;
 
 public:
+    BlackBoard bb;
+
     AIHelper() = default;
-    AIHelper(const LevelInfo&);
+    void Init(const LevelInfo&);
 
     void Update(const TurnInfo&);
     void FillActionList(std::vector<Action*>&);
 
-    void SwitchExploreToGoal(const unsigned int&); // remove -> behaviour tree
     bool TryAddNpcCurrentHexID(const unsigned int&, const unsigned int);
 
     const std::set<unsigned int>& getNpcsCurrentHexID() noexcept;
@@ -39,7 +38,7 @@ public:
     ~AIHelper() = default;
 
 private:
-    void setBestGoal(Npc&);
+   // void setBestGoal(Npc&);
 };
 
 #endif // AI_HELPER_H

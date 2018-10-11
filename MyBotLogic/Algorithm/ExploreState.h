@@ -11,6 +11,7 @@ enum ExploreObjective { ExploreInit, FindGoal, FoundGoal };
 class ExploreInfo {
 public:
     unsigned int npcID;
+    unsigned int hexIDToGo;
     ExploreObjective subObjective = ExploreObjective::ExploreInit;
     std::vector<Movement> pathRecord;
 
@@ -25,12 +26,12 @@ class ExploreState
 public:
     std::map<unsigned int, ExploreInfo> npcsExploreInfo;
 
-    const HexDirection Update(Npc*);
+    const Movement Update(Npc&);
 
     ExploreState() = default;
     ~ExploreState() = default;
 private:
-    const HexDirection getNextValidMovement(const unsigned int&);
+    const Movement getNextValidMovement(const unsigned int&);
 };
 
 #endif // !EXPLORE_STATE_H

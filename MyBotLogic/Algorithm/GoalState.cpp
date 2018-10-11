@@ -5,11 +5,11 @@
 
 #include <cassert>
 
-const HexDirection GoalState::Update(Npc& npc)
+const Movement GoalState::Update(Npc& npc)
 {
     assert(npcsGoalInfo.find(npc.ID) != end(npcsGoalInfo) && "Npc goal logic was never defined");
     auto& npcGoalInfo = npcsGoalInfo.at(npc.ID);
-    HexDirection result = HexDirection::CENTER;
+    Movement result = { HexDirection::CENTER, npc.hexID };
 
     bool retry = false;
     do
@@ -24,7 +24,7 @@ const HexDirection GoalState::Update(Npc& npc)
                 npcGoalInfo.subObjective = GoalObjective::Goal_Init;
             }
             else {
-                result = getNextValidMovement(npc);             
+                result = getNextValidMovement(npc);
             }
 
             break;
@@ -44,21 +44,23 @@ const HexDirection GoalState::Update(Npc& npc)
 }
 
 // TODO Copy/pasta from explorestate getnextvalidmovement
-const HexDirection GoalState::getNextValidMovement(Npc& npc) {
-    assert(npcsGoalInfo.find(npc.ID) != end(npcsGoalInfo) && "Npc goal logic was never defined");
+const Movement GoalState::getNextValidMovement(Npc& npc) {
+    assert(npcsGoalInfo.find(npc.ID) != end(npcsGoalInfo) && "Npc explore logic was never defined");
     auto& npcAIInfo = npcsGoalInfo.at(npc.ID);
 
-    assert(!npcAIInfo.pathRecord.empty() && "Npc goal path record is empty, no available move known");
-    auto resultingMovHexID = npcAIInfo.pathRecord.back().toHexID;
-    HexDirection nextDirection = HexDirection::CENTER;
+    assert(!npcAIInfo.pathRecord.empty() && "Npc explore path record is empty, no available move known");
+    auto nextMovement = npcAIInfo.pathRecord.back();
 
-    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, resultingMovHexID)) {
-        nextDirection = npcAIInfo.pathRecord.back().direction;
+    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, nextMovement.toHexID)) {
+        nextMovement = npcAIInfo.pathRecord.back();
         npcAIInfo.pathRecord.pop_back();
 
-        if (npcAIInfo.goalHexID == resultingMovHexID)
+        if (npcAIInfo.goalHexID == nextMovement.toHexID)
             npcAIInfo.subObjective = GoalObjective::Goal_Achieved;
     }
+    else {
+        nextMovement.direction = HexDirection::CENTER;
+    }
 
-    return nextDirection;
+    return nextMovement;
 }

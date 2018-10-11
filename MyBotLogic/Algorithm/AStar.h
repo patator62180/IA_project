@@ -12,7 +12,7 @@ class AStar
 {
 public:
     static PathRecord FindBestPath(const Npc&, const unsigned int&) noexcept;
-    static PathRecord FindBestExplorePath(const Npc&) noexcept;
+    static PathRecord FindBestExplorePath(const Npc&, const unsigned int&) noexcept;
 
 private:
     static PathRecord buildPath(const Record*) noexcept;

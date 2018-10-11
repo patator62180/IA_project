@@ -30,34 +30,35 @@ void Map::InitLayout(const int& rowCount_, const int& colCount_) noexcept {
 
 void Map::Update(const TurnInfo& ti) {
     updateHexes(ti);
-    connectHexes();
     updateObjects(ti);
 
-    std::stringstream ss;
-    ss << "-----MAP-----" << std::endl << *this;
-    DebugHelper::getInstance().Log(ss.str());
+    //std::stringstream ss;
+    //ss << "-----MAP-----" << std::endl << *this;
+    //DebugHelper::getInstance().Log(ss.str());
 }
 
 void Map::updateHexes(const TurnInfo& ti) noexcept
 {
-    for (auto tile : ti.tiles)
-        getHexByID(tile.second.tileID).type = tile.second.tileType;
+    for (auto tile : ti.tiles) {
+        auto& hex = getHexByID(tile.second.tileID);
+        hex.type = tile.second.tileType;
+        connectHex(hex);
+    }
 }
 
-void Map::connectHexes() noexcept
+void Map::connectHex(Hex& hex) noexcept
 {
-    for (auto& hex : layout)
-        for (auto i = 0; i < Hex::EDGES_COUNT; ++i)
-        {
-            auto direction = static_cast<HexDirection>(i);
-            auto result = isWorthAdding(hex, direction);
-            if (result.first && !hex.edges[direction].isBlocked) {
-                hex.edges[direction] = Edge{result.second, direction, !isHexAvailable(result.second) };
-            }
-            else {
-                hex.edges[direction].isBlocked = true;
-            }
+    for (auto i = 0; i < Hex::EDGES_COUNT; ++i)
+    {
+        auto direction = static_cast<HexDirection>(i);
+        auto result = isWorthAdding(hex, direction);
+        if (result.first && !hex.edges[direction].isBlocked) {
+            hex.edges[direction] = Edge{result.second, direction, !isHexAvailable(result.second) };
         }
+        else {
+            hex.edges[direction].isBlocked = true;
+        }
+    }
 }
 
 void Map::updateObjects(const TurnInfo& li) noexcept {
@@ -74,8 +75,7 @@ void Map::updateObjects(const TurnInfo& li) noexcept {
             if (isDefinedInLayout(adjacentHexPosOff)) {
                 auto& adjacentHex = getHexByID(hexPosOffToID(adjacentHexPosOff));
                 adjacentHex.edges[PathHelper::getReverseDirection(objectInfo.position)].setVisionProperty(isWindow);
-            }
-            
+            }            
         }
     });
 }

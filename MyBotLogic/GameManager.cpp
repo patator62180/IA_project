@@ -27,8 +27,8 @@ void GameManager::Init(const LevelInfo& levelInfo)
         static_cast<int>(levelInfo.rowCount),
         static_cast<int>(levelInfo.colCount));
     map.Update(turnInfo);
-    bb.Init(map.getLayout().size());
-    AIhelper = { levelInfo };
+
+    AIhelper.Init(levelInfo);
 }
 
 void GameManager::Update(const TurnInfo& turnInfo)
@@ -39,7 +39,6 @@ void GameManager::Update(const TurnInfo& turnInfo)
 
     map.Update(turnInfo);
     AIhelper.Update(turnInfo);
-    bb.Update(map, turnInfo);
 
     auto a = 9;
 }

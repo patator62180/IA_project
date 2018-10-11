@@ -19,8 +19,8 @@ struct Npc
     unsigned int movementRange;
     bool omniscient;
 
-    Npc(const unsigned int& ID, const unsigned int& hID, const unsigned int& vr, const unsigned int& movementRange, const bool& omniscient)
-        : ID{ ID }, hexID{ hID }, visionRange{ vr }, movementRange{ movementRange +1 }, omniscient{ omniscient }
+    Npc(const unsigned int& ID, const unsigned int& hID, const unsigned int& vr, const unsigned int& mr, const bool& omniscient)
+        : ID{ ID }, hexID{ hID }, visionRange{ vr }, movementRange{ mr }, omniscient{ omniscient }
     {}
     ~Npc() = default;
 

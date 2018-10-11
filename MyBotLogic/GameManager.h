@@ -5,14 +5,11 @@
 #include "AIHelper.h"
 #include "GameObject\Map.h"
 #include "GameObject\Npc.h"
-#include "Algorithm/BlackBoard.h"
 
 #include "LevelInfo.h"
 #include "TurnInfo.h"
 
 #include <map>
-
-
 
 class GameManager : Singleton
 {
@@ -21,8 +18,6 @@ private:
 
     Map map;
     AIHelper AIhelper;
-    BlackBoard bb;
-
 public:
     static GameManager& getInstance();
 
@@ -32,7 +27,7 @@ public:
 
     Map& getMap() noexcept;
     AIHelper& getAIHelper() noexcept;
-
+protected:
     ~GameManager() = default;
 };
 

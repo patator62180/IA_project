@@ -9,13 +9,15 @@
 #include <vector>
 #include <algorithm>
 
+using Edges = std::vector<Edge>;
+
 struct Hex
 {
     static const unsigned int EDGES_COUNT = 6;
     unsigned int ID;
     CoordAxial position;
-    HexType type = HexType::TileAttribute_Forbidden;
-    std::vector<Edge> edges;
+    HexType type = HexType::TileAttribute_Default;
+    Edges edges;
 
     Hex(const unsigned int ID, const CoordAxial position)
         : ID{ID}, position{position}, edges{ EDGES_COUNT }
@@ -29,12 +31,26 @@ struct Hex
         return type == HexType::TileAttribute_Goal;
     }
 
-    const float getBaseVisionScore() {
-        auto edgesValidCount = std::count_if(begin(edges), end(edges), [](const Edge& e) {
+    const int getEdgeCanSeeThroughCount() const noexcept {
+        return static_cast<int>(std::count_if(begin(edges), end(edges), [](const Edge& e) {
             return e.canSeeThrough;
-        });
+        }));
+    }
 
-        return edgesValidCount / static_cast<float>(EDGES_COUNT);
+    const bool areAllEdgesBlocked() const noexcept {
+        return std::count_if(begin(edges), end(edges), [](const Edge& e) {
+            return e.isBlocked;
+        }) == EDGES_COUNT;
+    }
+
+    const std::vector<unsigned int> getValidAdjacentHexIDs() {
+        std::vector<unsigned int> result;
+
+        for (auto e : edges)
+            if (!e.isBlocked)
+                result.push_back(e.leadsToHexID);
+
+        return result;
     }
 
     friend std::ostream& operator<<(std::ostream& os, Hex&);

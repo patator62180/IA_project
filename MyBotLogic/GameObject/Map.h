@@ -32,7 +32,7 @@ public:
     friend std::ostream& operator<<(std::ostream&, Map&);
 private:
     void updateHexes(const TurnInfo&) noexcept;
-    void connectHexes() noexcept;
+    void connectHex(Hex&) noexcept;
     void updateObjects(const TurnInfo&) noexcept;
 
     Hex& getHexByID(const unsigned int&);

@@ -3,6 +3,7 @@
 #include "../GameManager.h"
 #include "../Utils/PathHelper.h"
 #include "../MapStructure/Hex.h"
+#include "../AIHelper.h"
 
 #include <algorithm>
 
@@ -26,7 +27,7 @@ PathRecord AStar::FindBestPath(const Npc& npc, const unsigned int& goalHexID) no
         opened.erase(currentRecord);
         closed.insert(currentRecord);
 
-        if (currentHex.ID == goalHexID || movementCount > npc.movementRange)
+        if (currentHex.ID == goalHexID)
             return buildPath(currentRecord);
 
         ++movementCount;
@@ -39,7 +40,6 @@ PathRecord AStar::FindBestPath(const Npc& npc, const unsigned int& goalHexID) no
 
                 if (! (hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
                     auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), movementCount);
-
                     opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, movementCount });
                 }
             }
@@ -49,40 +49,42 @@ PathRecord AStar::FindBestPath(const Npc& npc, const unsigned int& goalHexID) no
     return { { HexDirection::CENTER, npc.hexID } };
 }
 
-PathRecord AStar::FindBestExplorePath(const Npc& npc) noexcept
+PathRecord AStar::FindBestExplorePath(const Npc& npc, const unsigned int& hexIDToGo) noexcept
 {
-    //AStarRecord opened;
-    //AStarRecord closed;
-    //auto map = GameManager::getInstance().getMap();
-    //auto currentHex = map.getCHexById(npc.hexID);
-    //auto obstacleHexID = GameManager::getInstance().getAIHelper().getNpcsCurrentHexID();
+    AStarRecord opened;
+    AStarRecord closed;
+    auto map = GameManager::getInstance().getMap();
+    auto currentHex = map.getConstHexByID(npc.hexID);
+    auto hexGoal = map.getConstHexByID(hexIDToGo);
+    auto obstacleHexID = GameManager::getInstance().getAIHelper().getNpcsCurrentHexID();
+    auto bb = GameManager::getInstance().getAIHelper().bb;
 
-    //unsigned int movementCount = 0;
-    //opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, movementCount));
-    //
-    //do
-    //{
-    //    auto currentRecord = *(opened.begin());
-    //    currentHex = map.getCHexById(currentRecord->hexID);
-    //    opened.erase(currentRecord);
-    //    closed.insert(currentRecord);
+    opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, 0));
 
-    //    if (movementCount > npc.visionRange)
-    //        return buildPath(currentRecord);
+    do
+    {        
+        auto currentRecord = *(opened.begin());
+        currentHex = map.getConstHexByID(currentRecord->hexID);
+        opened.erase(currentRecord);
+        closed.insert(currentRecord);
 
-    //    ++movementCount;
-    //    for (auto edge : currentHex.edges)
-    //    {
-    //        auto adjacenHex = map.getCHexById(edge.leadsToHexID);
+        if (currentHex.ID == hexIDToGo)
+            return buildPath(currentRecord);
 
-    //        if (!(hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)))
-    //        {               
-    //            //need to calculate score from blackboard
-    //            //auto score = Record::calculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), movementCount);
-    //            //opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, movementCount });
-    //        }
-    //    }
-    //} while (!opened.empty());
+        for (auto edge : currentHex.edges)
+        {
+            if (!edge.isBlocked)
+            {
+                auto adjacenHex = map.getConstHexByID(edge.leadsToHexID);
+
+                if (!(hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID))) {
+                   // auto score = bb.data[adjacenHex.ID];
+                    auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), currentRecord->movementCount+1);;
+                    opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, currentRecord->movementCount+1 });
+                }
+            }
+        }
+    } while (!opened.empty());
 
     return { { HexDirection::CENTER, npc.hexID } };
 }

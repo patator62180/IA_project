@@ -1,80 +1,78 @@
 #ifndef BLACKBOARD_H
 #define BLACKBOARD_H
 
-#include "../GameObject/Map.h"
 #include "../GameObject/Npc.h"
-#include "NPCInfo.h"
+#include "../MapStructure/Hex.h"
+#include "TurnInfo.h"
 
 #include <vector>
 
 using BlackBoardData = std::vector<int>;
 
+using InfluenceHex = std::pair<unsigned int, int>;
+using InfluenceMap = std::set<InfluenceHex>;
+
+struct Goal {
+    unsigned int hexID;
+    bool available;
+
+    Goal(const unsigned int& hexID)
+        : hexID{ hexID }, available{ true }
+    {}
+};
+using Goals = std::vector<Goal>;
+
 class BlackBoard
 {
 private:
-    const int UNITIALIZED = -1;
-    const int GOAL_SCORE = 1000;
+    const int UNINITIALIZED = -1;
+    const int GOAL_SCORE = 100000;
 
     const int MIN_REAL_SCORE = 0;
-    const int MAX_REAL_SCORE = 5;
+    const int MAX_REAL_SCORE = 6;
     const int MIN_TEMP_SCORE = 10;
     const int MAX_TEMP_SCORE = GOAL_SCORE - 1;
+
+    const int TURN_WEIGHT = 10;
+   // const int TURN_WEIGHT = Hex::EDGES_COUNT;
+
+    Goals goals;
 
 public:
     BlackBoardData data;
 
     BlackBoard() = default;
+    void Init(const size_t&) noexcept;
 
-    void Init(const size_t& size)
-    {
-        data = BlackBoardData(size, UNITIALIZED);
-    }
+    void UpdateNpcsVision(const TurnInfo&) noexcept;
+    void UpdateNpcTile(const unsigned int&) noexcept;
+    void UpdateGoalTile(const unsigned int&) noexcept;
 
-    void Update(const Map& map, const TurnInfo& turnInfos) {
-        for (auto npcInfo : turnInfos.npcs) {
-            auto npcHex = map.getConstHexByID(npcInfo.second.tileID);
-            data[npcHex.ID] = getRealVisionScore(npcHex);
+    const int getTempVisionScore(const Hex&, const unsigned int& turnNb) const noexcept;
+    const int getRealVisionScore(const Hex&) const noexcept;
 
-            for (auto hexID : npcInfo.second.visibleTiles) {
-                if (needUpdate(data[hexID])) {
-                    auto hex = map.getConstHexByID(hexID);
-                    auto score = hex.isGoal() ? GOAL_SCORE : getTempVisionScore(hex, turnInfos.turnNb);
-                    data[hex.ID] = score;
-                }
-            }
-        }
-    }
+    const bool needUpdate(const int& score) noexcept;
+    const unsigned int getBestHexIDToGo(const Npc&) noexcept;
 
-    const int getTempVisionScore(const Hex& h, const unsigned int& turnNb) {
-        return getRealVisionScore(h) + turnNb;
-    }
-
-    const int getRealVisionScore(const Hex& h) {
-        return static_cast<int>(std::count_if(begin(h.edges), end(h.edges), [](const Edge& e) {
-            return e.canSeeThrough;
-        }));
-    }
-
-    const bool needUpdate(const int& score) {
-        return score == UNITIALIZED;
-    }
-
-    unsigned int getBestHexIDToGo() {
-        auto maxIter = std::max_element(begin(data), end(data));
-        return static_cast<unsigned int>(std::distance(begin(data), maxIter));
-    }
+    const bool isRealScore(const int&);
 
     ~BlackBoard() = default;
 
     friend std::ostream& operator<<(std::ostream& os, BlackBoard&);
+
+private:
+    unsigned int FindClosestGoal(const Npc&);
 };
 
 inline std::ostream& operator<<(std::ostream& os, BlackBoard& h)
 {
     int cpt = 0;
     for (auto data : h.data) {
-        os << "hexID:" << cpt++ << ' '
+        if (data != h.UNINITIALIZED)
+            os << "hexID:" << cpt++ << ' '
             << "Prob:" << data << std::endl;
+        else
+            ++cpt;
     }
 
     return os;

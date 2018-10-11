@@ -2,14 +2,19 @@
 
 #include "GameManager.h"
 #include "Utils/PathHelper.h"
+#include "Utils/DebugHelper.h"
 #include "Algorithm/AStar.h"
 
 #include <algorithm>
 #include <cassert>
 #include <utility>
+#include <sstream>
 
-AIHelper::AIHelper(const LevelInfo& levelInfo)
+void AIHelper::Init(const LevelInfo& levelInfo)
 {
+    bb.Init(levelInfo.rowCount * levelInfo.colCount);
+
+    //TODO function
     for (auto npc : levelInfo.npcs) {
         npcs.insert({
             npc.first,
@@ -21,16 +26,19 @@ AIHelper::AIHelper(const LevelInfo& levelInfo)
                 npc.second.omniscient
             } });
         npcsCurrentHexID.insert(npc.second.tileID);
+        bb.UpdateNpcTile(npc.second.tileID);
     }
 
+    //TODO function
     for (auto hex : GameManager::getInstance().getMap().getLayout())
-        if (hex.type == HexType::TileAttribute_Goal)
-            goalHexIDs.insert(hex.ID);
-
+        if (hex.type == HexType::TileAttribute_Goal && !hex.areAllEdgesBlocked())
+            bb.UpdateGoalTile(hex.ID);
+            
     //TODO remove -> add to behaviour tree
     for (auto pair : npcs) {
         if (pair.second.omniscient) {
-            setBestGoal(pair.second);
+            auto goalHexID = bb.getBestHexIDToGo(pair.second);
+            goalState.npcsGoalInfo.insert({ pair.second.ID, GoalInfo{ pair.second.ID, goalHexID } });
         }
         else {
             exploreState.npcsExploreInfo.insert({ pair.first, ExploreInfo{ pair.first } });
@@ -45,6 +53,11 @@ void AIHelper::Update(const TurnInfo& turnInfo) {
         npcs.at(n.first).hexID = n.second.tileID; 
         npcsCurrentHexID.insert(n.second.tileID);
     }
+
+    bb.UpdateNpcsVision(turnInfo);
+    std::stringstream ss;
+    ss << "-----BlackBoard-----" << std::endl << bb;
+    DebugHelper::getInstance().Log(ss.str());
 }
 
 void AIHelper::FillActionList(std::vector<Action*>& actionList)
@@ -52,46 +65,14 @@ void AIHelper::FillActionList(std::vector<Action*>& actionList)
     for (auto pair : npcs)
     {
         auto npc = pair.second;
+        bool isNpcGoal = goalState.npcsGoalInfo.find(npc.ID) != end(goalState.npcsGoalInfo);
+        Movement next = isNpcGoal ? goalState.Update(npc) : exploreState.Update(npc);
 
-        if(goalState.npcsGoalInfo.find(npc.ID) != end(goalState.npcsGoalInfo))
-            actionList.push_back(
-                new Move(npc.ID, goalState.Update(npc))
-            );
-        else {
-            actionList.push_back(
-                new Move(npc.ID, HexDirection::NW)
-               // new Move(npc.ID, exploreState.Update(npc))
-            );
-        }
+        actionList.push_back(
+            new Move(npc.ID, next.direction)
+        );
+        bb.UpdateNpcTile(next.toHexID);
     }
-}
-
-void AIHelper::setBestGoal(Npc& npc) {
-    assert(!goalHexIDs.empty() && "No goal available");
-    auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npc.hexID);
-
-    float shortest = std::numeric_limits<float>::max();
-    unsigned int npcGoalID = npcHex.ID;
-
-    for (auto goalID : goalHexIDs) {
-        auto goalHex = GameManager::getInstance().getMap().getConstHexByID(goalID);
-        auto test = PathHelper::DistanceBetween(npcHex.position, goalHex.position);
-        if (shortest > test)
-        {
-            shortest = test;
-            npcGoalID = goalID;
-        }            
-    }
-
-    assert(npcGoalID != npc.hexID && "No goal available... again?");
-    goalHexIDs.erase(npcGoalID);
-    goalState.npcsGoalInfo.insert({ npc.ID, GoalInfo{ npc.ID, npcGoalID } });
-}
-
-void AIHelper::SwitchExploreToGoal(const unsigned int& npcID)
-{
-    exploreState.npcsExploreInfo.erase(npcID);
-    setBestGoal(npcs.at(npcID));
 }
 
 bool AIHelper::TryAddNpcCurrentHexID(const unsigned int& npcID, const unsigned int toAdd)

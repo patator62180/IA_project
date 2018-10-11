@@ -1,15 +1,17 @@
 #include "ExploreState.h"
 
 #include "../GameManager.h"
+#include "../Utils/DebugHelper.h"
 #include "AStar.h"
 
 #include <cassert>
+#include <sstream>
 
-const HexDirection ExploreState::Update(Npc* npc)
+const Movement ExploreState::Update(Npc& npc)
 {
-    assert(npcsExploreInfo.find(npc->ID) != end(npcsExploreInfo) && "Npc Explore logic was never defined");
-    auto& npcExploreInfo = npcsExploreInfo.at(npc->ID);
-    HexDirection result = HexDirection::CENTER;
+    assert(npcsExploreInfo.find(npc.ID) != end(npcsExploreInfo) && "Npc Explore logic was never defined");
+    auto& npcExploreInfo = npcsExploreInfo.at(npc.ID);
+    Movement result = { HexDirection::CENTER, npc.hexID };
 
     bool retry = false;
     do
@@ -17,72 +19,57 @@ const HexDirection ExploreState::Update(Npc* npc)
         switch (npcExploreInfo.subObjective)
         {
         case ExploreObjective::FindGoal:
+            retry = npcExploreInfo.pathRecord.empty();
 
-            retry = false;
+            if (retry) {
+                npcExploreInfo.subObjective = ExploreObjective::ExploreInit;
+            }
+            else {
+                result = getNextValidMovement(npc.ID);
+
+                auto hex = GameManager::getInstance().getMap().getConstHexByID(result.toHexID);
+                if(hex.isGoal())
+                    npcExploreInfo.subObjective = ExploreObjective::FoundGoal;
+            }
+
             break;
 
         case ExploreObjective::FoundGoal:
-            GameManager::getInstance().getAIHelper().SwitchExploreToGoal(npcExploreInfo.npcID);
+            //GameManager::getInstance().getAIHelper().SwitchExploreToGoal(npcExploreInfo.npcID);
             break;
 
         case ExploreObjective::ExploreInit:
-            //  npcExploreInfo.pathRecord = AStar::getBestExplorePath(npc);
+            npcExploreInfo.hexIDToGo = GameManager::getInstance().getAIHelper().bb.getBestHexIDToGo(npc);
+            npcExploreInfo.pathRecord = AStar::FindBestExplorePath(npc, npcExploreInfo.hexIDToGo);
             npcExploreInfo.subObjective = ExploreObjective::FindGoal;
             retry = true;
             break;
         }
     } while (retry);
 
+    std::stringstream ss;
+    ss << "-----NPC-----" << std::endl;
+    ss << "NpcID:" << npc.ID << " ToHexID:" << result.toHexID << " PathSize:" << npcExploreInfo.pathRecord.size();;
+    DebugHelper::getInstance().Log(ss.str());
+
     return result;
 }
 
-/*
-const HexDirection GoalState::Update(Npc& npc)
-{
-assert(npcsGoalInfo.find(npc.ID) != end(npcsGoalInfo) && "Npc goal logic was never defined");
-auto& npcGoalInfo = npcsGoalInfo.at(npc.ID);
-HexDirection result = HexDirection::CENTER;
-
-bool retry = false;
-do
-{
-switch (npcGoalInfo.subObjective)
-{
-case GoalObjective::Goal_InProgress:
-result = getNextValidMovement(npc.ID);
-retry = false;
-break;
-
-case GoalObjective::Goal_Achieved:
-break;
-
-case GoalObjective::Goal_Init:
-npcGoalInfo.pathRecord = AStar::getBestPath(npc, npcGoalInfo.goalHexID);
-npcGoalInfo.subObjective = GoalObjective::Goal_InProgress;
-retry = true;
-break;
-}
-} while (retry);
-
-return result;
-}
-
-*/
-//
-
 // TODO Copy/pasta from goalstate getnextvalidmovement
-const HexDirection ExploreState::getNextValidMovement(const unsigned int& npcID) {
+const Movement ExploreState::getNextValidMovement(const unsigned int& npcID) {
     assert(npcsExploreInfo.find(npcID) != end(npcsExploreInfo) && "Npc explore logic was never defined");
-    auto npcAIInfo = npcsExploreInfo.at(npcID);
+    auto& npcAIInfo = npcsExploreInfo.at(npcID);
 
     assert(!npcAIInfo.pathRecord.empty() && "Npc explore path record is empty, no available move known");
-    auto resultingMovHexID = npcAIInfo.pathRecord.back().toHexID;
-    HexDirection nextDirection = HexDirection::CENTER;
+    auto nextMovement = npcAIInfo.pathRecord.back();
 
-    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcID, resultingMovHexID)) {
-        nextDirection = npcAIInfo.pathRecord.back().direction;
+    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcID, nextMovement.toHexID)) {
+        nextMovement = npcAIInfo.pathRecord.back();
         npcAIInfo.pathRecord.pop_back();
     }
+    else {
+        nextMovement.direction = HexDirection::CENTER;
+    }
 
-    return nextDirection;
+    return nextMovement;
 }
