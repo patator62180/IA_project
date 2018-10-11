@@ -36,9 +36,6 @@ public:
     const std::set<unsigned int>& getNpcsCurrentHexID() noexcept;
 
     ~AIHelper() = default;
-
-private:
-   // void setBestGoal(Npc&);
 };
 
 #endif // AI_HELPER_H

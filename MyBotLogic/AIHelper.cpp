@@ -37,7 +37,7 @@ void AIHelper::Init(const LevelInfo& levelInfo)
     //TODO remove -> add to behaviour tree
     for (auto pair : npcs) {
         if (pair.second.omniscient) {
-            auto goalHexID = bb.getBestHexIDToGo(pair.second);
+            auto goalHexID = bb.FindClosestGoal(pair.second);
             goalState.npcsGoalInfo.insert({ pair.second.ID, GoalInfo{ pair.second.ID, goalHexID } });
         }
         else {

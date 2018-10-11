@@ -16,6 +16,7 @@ PathRecord AStar::FindBestPath(const Npc& npc, const unsigned int& goalHexID) no
     auto currentHex = map.getConstHexByID(npc.hexID);
     auto hexGoal = map.getConstHexByID(goalHexID);
     auto obstacleHexID = GameManager::getInstance().getAIHelper().getNpcsCurrentHexID();
+    auto bb = GameManager::getInstance().getAIHelper().bb;
 
     unsigned int movementCount = 0;
     opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, movementCount));
@@ -39,7 +40,8 @@ PathRecord AStar::FindBestPath(const Npc& npc, const unsigned int& goalHexID) no
                 auto adjacenHex = map.getConstHexByID(edge.leadsToHexID);
 
                 if (! (hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
-                    auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), movementCount);
+                   auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), movementCount);
+                   // auto score = currentRecord->score + bb.data[adjacenHex.ID];
                     opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, movementCount });
                 }
             }

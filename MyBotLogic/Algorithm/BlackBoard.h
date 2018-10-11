@@ -53,6 +53,7 @@ public:
 
     const bool needUpdate(const int& score) noexcept;
     const unsigned int getBestHexIDToGo(const Npc&) noexcept;
+    unsigned int FindClosestGoal(const Npc&);
 
     const bool isRealScore(const int&);
 
@@ -61,7 +62,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, BlackBoard&);
 
 private:
-    unsigned int FindClosestGoal(const Npc&);
+
 };
 
 inline std::ostream& operator<<(std::ostream& os, BlackBoard& h)
