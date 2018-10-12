@@ -5,8 +5,7 @@
 #include "LevelInfo.h"
 #include "TurnInfo.h"
 #include "GameObject/Npc.h"
-#include "Algorithm/GoalState.h"
-#include "Algorithm/ExploreState.h"
+#include "Algorithm/StateMachine.h"
 #include "Algorithm/BlackBoard.h"
 
 #include <vector>
@@ -18,8 +17,7 @@ class AIHelper
 private:
     std::map<unsigned int, Npc> npcs;
 
-    GoalState goalState; // remove -> behaviour tree
-    ExploreState exploreState; //remove -> behaviour tree
+    StateMachine exploreState; //remove -> behaviour tree
     std::set<unsigned int> npcsCurrentHexID;
 
 public:

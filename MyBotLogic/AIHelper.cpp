@@ -27,23 +27,13 @@ void AIHelper::Init(const LevelInfo& levelInfo)
             } });
         npcsCurrentHexID.insert(npc.second.tileID);
         bb.UpdateNpcTile(npc.second.tileID);
+        exploreState.npcsStateInfo.insert( { npc.first, {} });
     }
 
     //TODO function
     for (auto hex : GameManager::getInstance().getMap().getLayout())
         if (hex.type == HexType::TileAttribute_Goal && !hex.areAllEdgesBlocked())
             bb.UpdateGoalTile(hex.ID);
-            
-    //TODO remove -> add to behaviour tree
-    for (auto pair : npcs) {
-        if (pair.second.omniscient) {
-            auto goalHexID = bb.FindClosestGoal(pair.second);
-            goalState.npcsGoalInfo.insert({ pair.second.ID, GoalInfo{ pair.second.ID, goalHexID } });
-        }
-        else {
-            exploreState.npcsExploreInfo.insert({ pair.first, ExploreInfo{ pair.first } });
-        }
-    }
 }
 
 void AIHelper::Update(const TurnInfo& turnInfo) {
@@ -65,8 +55,7 @@ void AIHelper::FillActionList(std::vector<Action*>& actionList)
     for (auto pair : npcs)
     {
         auto npc = pair.second;
-        bool isNpcGoal = goalState.npcsGoalInfo.find(npc.ID) != end(goalState.npcsGoalInfo);
-        Movement next = isNpcGoal ? goalState.Update(npc) : exploreState.Update(npc);
+        Movement next = exploreState.Update(npc);
 
         actionList.push_back(
             new Move(npc.ID, next.direction)

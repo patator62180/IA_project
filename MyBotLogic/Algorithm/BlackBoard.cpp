@@ -47,37 +47,26 @@ const bool BlackBoard::needUpdate(const int& score) noexcept {
 
 const unsigned int BlackBoard::getBestHexIDToGo(const Npc& npc) noexcept {
 
-    auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npc.hexID);
-    auto adjacentHexIDs = npcHex.getValidAdjacentHexIDs();
+    //auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npc.hexID);
+    //auto adjacentHexIDs = npcHex.getValidAdjacentHexIDs();
 
     //InfluenceMap influenceMap;
     //for (auto id : adjacentHexIDs)
     //    if(!needUpdate(data[id]))
     //        influenceMap.insert({ id, data[id] });
 
-    InfluenceMap influenceMap;
-    for (auto id : adjacentHexIDs)
-            influenceMap.insert({ id, data[id] });
+    //InfluenceMap influenceMap;
+    //for (auto id : adjacentHexIDs)
+    //        influenceMap.insert({ id, data[id] });
 
     //if(influenceMap.empty())
     //    return *std::max_element(begin(data), end(data));
 
-    auto maxIter = std::max_element(begin(influenceMap), end(influenceMap), [](const InfluenceHex& r, const InfluenceHex& l) {
-        return r.second < l.second;
+    auto maxIter = std::max_element(begin(data), end(data), [](const int& r, const int& l) {
+        return r < l;
     });
 
-    unsigned int ID;
-
-    if (maxIter->second == GOAL_SCORE)
-    {
-        ID = FindClosestGoal(npc);
-    }
-    else
-    {
-        ID = maxIter->first;
-    }
-
-    return ID;
+    return (*maxIter == GOAL_SCORE) ? FindClosestGoal(npc) : *maxIter;
 }
 
 const bool BlackBoard::isRealScore(const int& score) {
