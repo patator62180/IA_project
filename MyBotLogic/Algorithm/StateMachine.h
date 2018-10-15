@@ -2,32 +2,33 @@
 #define STATE_MACHINE_H
 
 #include "../GameObject/Npc.h"
+#include "InfluenceZone.h"
 
 #include <vector>
 #include <map>
 
-enum State { Init, Explore, ExploreOriented, OnGoal };
+enum State { Init, Explore, GoToGoal, OnGoal };
 
-class StateInfo {
-public:
+struct NpcStateInfo {
+    Npc npc;
     State objective = State::Init;
     std::vector<Movement> pathRecord;
-    //InfluenceZone
+    InfluenceZone influenceZone;
 
-    StateInfo() = default;
+    NpcStateInfo(const Npc&);
 };
 
 class StateMachine
 {
 public:
-    std::map<unsigned int, StateInfo> npcsStateInfo;
+    std::map<unsigned int, NpcStateInfo> npcsStateInfo;
 
     const Movement Update(Npc&);
 
     StateMachine() = default;
     ~StateMachine() = default;
 private:
-    const Movement getNextValidMovement(const unsigned int&);
+    const Movement getNextValidMovement(const unsigned int);
 };
 
 #endif // !STATE_MACHINE_H

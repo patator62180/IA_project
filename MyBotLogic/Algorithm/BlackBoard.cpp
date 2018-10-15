@@ -1,98 +1,79 @@
-#include "BlackBoard.h"
+﻿#include "BlackBoard.h"
 
 #include "../GameManager.h"
 #include "../GameObject/Map.h"
 #include "../Utils/PathHelper.h"
 
 #include <assert.h>
+#include <algorithm>
+#include <deque>
 
 void BlackBoard::Init(const size_t& size) noexcept
 {
-    data = BlackBoardData(size, UNINITIALIZED);
+    data.resize(size);
 }
 
-void BlackBoard::UpdateNpcsVision(const TurnInfo& turnInfos) noexcept {
-    auto map = GameManager::getInstance().getMap();
+void BlackBoard::UpdateNpc(NpcStateInfo& stateInfo, const std::set<unsigned int>& seenHexesID) noexcept {
+    auto npcHex = GameManager::getInstance().getMap().getHexByID(stateInfo.npc.hexID);
+    data[stateInfo.npc.hexID] = MIN_VISITED_SCORE + npcHex.EdgeCountNotBlocked();
 
-    for (auto npcInfo : turnInfos.npcs)
-        for (auto hexID : npcInfo.second.visibleTiles)
-            if (needUpdate(data[hexID])) {
-                auto hex = map.getConstHexByID(hexID);
-                auto score = getTempVisionScore(hex, turnInfos.turnNb);
-                data[hex.ID] = score;
-            }
+    stateInfo.influenceZone.Update(seenHexesID);
+    for (auto highValueData : stateInfo.influenceZone.dataInTime) {
+        if(data[highValueData.hexID] < highValueData.score)
+            data[highValueData.hexID] = highValueData.score;
+    }
+
+    for (auto edge : npcHex.edges) {
+        if (! (edge.isBlocked || hasBeenVisited(data[edge.leadsToHexID]) )) {
+            data[edge.leadsToHexID] = ADJACENT_NOT_VISITED;
+        }
+    }
 }
 
-void BlackBoard::UpdateNpcTile(const unsigned int& npcHexID) noexcept {
-    auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npcHexID);
-    data[npcHexID] = MIN_REAL_SCORE + getRealVisionScore(npcHex);
+inline bool BlackBoard::hasBeenVisited(const unsigned int score) const {
+    return score > ADJACENT_NOT_VISITED;
 }
 
-void BlackBoard::UpdateGoalTile(const unsigned int& goalHexID) noexcept {
-    data[goalHexID] = GOAL_SCORE;
+void BlackBoard::UpdateGoal(const unsigned int goalHexID) noexcept {
     goals.push_back({ goalHexID });
 }
 
-const int BlackBoard::getTempVisionScore(const Hex& h, const unsigned int& turnNb) const noexcept {
-    return MIN_TEMP_SCORE + getRealVisionScore(h) + turnNb * TURN_WEIGHT;
+void BlackBoard::setBestInfluenceHex(NpcStateInfo& npcInfo) {
+
+    auto bestResult = npcInfo.influenceZone.consumeBestLatestHexID();
+
+    if (bestResult.score == 0) {
+        std::deque<unsigned int> hexIDToDo;
+        hexIDToDo.push_back(npcInfo.npc.hexID);
+       
+        auto map = GameManager::getInstance().getMap();
+
+        bool found = false;
+        while (!found) {
+            auto hex = map.getHexByID(hexIDToDo.front());
+            hexIDToDo.pop_front();
+
+            for (auto edge : hex.edges) {
+                if (!edge.isBlocked) {
+                    if (data[edge.leadsToHexID] == ADJACENT_NOT_VISITED) {
+                        bestResult.hexID = edge.leadsToHexID;
+                        bestResult.score = data[edge.leadsToHexID];
+                        found = true;
+                        break;
+                    }
+                    hexIDToDo.emplace_back(edge.leadsToHexID);
+                }
+            }
+        }
+    }
+    npcInfo.influenceZone.currentHighest = bestResult;
 }
 
-const int BlackBoard::getRealVisionScore(const Hex& h) const noexcept {
-    return h.getEdgeCanSeeThroughCount();
-}
-
-const bool BlackBoard::needUpdate(const int& score) noexcept {
-    return score == UNINITIALIZED;// || !isRealScore(score);
-}
-
-const unsigned int BlackBoard::getBestHexIDToGo(const Npc& npc) noexcept {
-
-    //auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npc.hexID);
-    //auto adjacentHexIDs = npcHex.getValidAdjacentHexIDs();
-
-    //InfluenceMap influenceMap;
-    //for (auto id : adjacentHexIDs)
-    //    if(!needUpdate(data[id]))
-    //        influenceMap.insert({ id, data[id] });
-
-    //InfluenceMap influenceMap;
-    //for (auto id : adjacentHexIDs)
-    //        influenceMap.insert({ id, data[id] });
-
-    //if(influenceMap.empty())
-    //    return *std::max_element(begin(data), end(data));
-
-    auto maxIter = std::max_element(begin(data), end(data), [](const int& r, const int& l) {
-        return r < l;
+unsigned int BlackBoard::getBestGoal(const unsigned int npcID) {
+    auto goalIter = std::find_if(begin(goals), end(goals), [&npcID](Goal& g) {
+        return g.available.first || npcID == g.available.second;
     });
 
-    return (*maxIter == GOAL_SCORE) ? FindClosestGoal(npc) : *maxIter;
-}
-
-const bool BlackBoard::isRealScore(const int& score) {
-    return MIN_REAL_SCORE <= score && score >= MAX_REAL_SCORE;
-}
-
-unsigned int BlackBoard::FindClosestGoal(const Npc& npc) {
-    assert(!goals.empty() && "No goal available");
-    auto npcHex = GameManager::getInstance().getMap().getConstHexByID(npc.hexID);
-
-    std::vector<float> results;
-    for (auto goal : goals)
-        if (goal.available) {
-            auto goalHex = GameManager::getInstance().getMap().getConstHexByID(goal.hexID);
-            results.push_back(PathHelper::DistanceBetween(npcHex.position, goalHex.position));
-        }
-        else {
-            results.push_back(1000);
-        }
-
-        auto result = std::min_element(begin(results), end(results));
-        auto index = std::distance(begin(results), result);
-        auto& goal = goals.at(index);
-
-        assert(goal.hexID != npc.hexID && "No goal available... again?");
-
-        goal.available = false;
-        return goal.hexID;
+    goalIter->available = { false, npcID };
+    return goalIter->hexID;
 }

@@ -13,44 +13,38 @@ using Edges = std::vector<Edge>;
 
 struct Hex
 {
+public:
     static const unsigned int EDGES_COUNT = 6;
     unsigned int ID;
     CoordAxial position;
-    HexType type = HexType::TileAttribute_Default;
+    HexType type = HexType::TileAttribute_Uninitialized;
     Edges edges;
 
     Hex(const unsigned int ID, const CoordAxial position)
         : ID{ID}, position{position}, edges{ EDGES_COUNT }
-    {}
-
-    const bool isForbidden() const noexcept {
-        return type == HexType::TileAttribute_Forbidden;
+    {
+        for (int i = 0; i < Hex::EDGES_COUNT; ++i)
+            edges[i].direction = static_cast<HexDirection>(i);
     }
 
-    const bool isGoal() const noexcept {
-        return type == HexType::TileAttribute_Goal;
+    const bool isType(const HexType& typeCompare) const noexcept {
+        return type == typeCompare;
     }
 
-    const int getEdgeCanSeeThroughCount() const noexcept {
-        return static_cast<int>(std::count_if(begin(edges), end(edges), [](const Edge& e) {
-            return e.canSeeThrough;
+    const unsigned int EdgeCountNotBlocked() const noexcept {
+        return static_cast<unsigned int>(std::count_if(begin(edges), end(edges), [](const Edge& e) {
+            return !e.isBlocked;
         }));
     }
 
     const bool areAllEdgesBlocked() const noexcept {
-        return std::count_if(begin(edges), end(edges), [](const Edge& e) {
-            return e.isBlocked;
-        }) == EDGES_COUNT;
+        return EdgeCountNotBlocked() == 0;
     }
 
-    const std::vector<unsigned int> getValidAdjacentHexIDs() {
-        std::vector<unsigned int> result;
-
-        for (auto e : edges)
-            if (!e.isBlocked)
-                result.push_back(e.leadsToHexID);
-
-        return result;
+    const unsigned int EdgeCountType(const EdgeType type) const noexcept {
+        return static_cast<unsigned int>(std::count_if(begin(edges), end(edges), [&type](const Edge& e) {
+            return e.type == type;
+        }));
     }
 
     friend std::ostream& operator<<(std::ostream& os, Hex&);
@@ -63,7 +57,6 @@ inline std::ostream& operator<<(std::ostream& os, Hex& h)
  
     for (auto edge : h.edges)
         if (!edge.isBlocked)
-       // if (edge.canSeeThrough)
             os << edge << std::endl;
 
     return os;

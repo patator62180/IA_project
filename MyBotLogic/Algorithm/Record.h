@@ -1,9 +1,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-#include "globals.h"
-#include "../MapStructure/CoordAxial.h"
-#include "../Utils/PathHelper.h"
+#include "Globals.h"
 
 #include <set>
 
@@ -21,7 +19,7 @@ struct Record {
         :score{ score }, hexID{ hexID }, direction(direction), parent{ parent }, movementCount{ movementCount }
     {}
 
-    inline static const /*unsigned*/ int CalculateScore(const float& distance, const unsigned int& movementCount) noexcept {
+    inline static const /*unsigned*/ int CalculateScore(const float& distance, const unsigned int movementCount) noexcept {
         return static_cast<unsigned int>(distance + movementCount);
     }
 
