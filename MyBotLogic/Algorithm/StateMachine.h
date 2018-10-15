@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 
-enum State { Init, Explore, GoToGoal, OnGoal };
+enum State { Init, Explore, Blocked, OnGoal };
 
 struct NpcStateInfo {
     Npc npc;

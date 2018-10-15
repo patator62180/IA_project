@@ -63,9 +63,8 @@ InfluenceHex InfluenceZone::consumeBestLatestHexID() {
             return ih.hexID == maxIter->hexID;
         }), end(dataInTime));
 
-        ////TODO function in aihelper
-        //if (GameManager::getInstance().getAIHelper().getNpcsCurrentHexID().find(result.hexID) != end(GameManager::getInstance().getAIHelper().getNpcsCurrentHexID()))
-        //    return consumeBestLatestHexID();
+        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID))
+            return consumeBestLatestHexID();
     }
 
     return result;

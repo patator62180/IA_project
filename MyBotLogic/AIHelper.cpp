@@ -67,6 +67,11 @@ bool AIHelper::TryAddNpcCurrentHexID(const unsigned int npcID, const unsigned in
     return success;
 }
 
+bool AIHelper::isHexIDOccupied(const unsigned int hexIDtoLook)
+{
+    return npcsCurrentHexID.find(hexIDtoLook) != end(npcsCurrentHexID);
+}
+
 const std::set<unsigned int>& AIHelper::getNpcsCurrentHexID() noexcept {
     return npcsCurrentHexID;
 }

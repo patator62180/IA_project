@@ -14,7 +14,7 @@ NpcStateInfo::NpcStateInfo(const Npc& npc)
 const Movement StateMachine::Update(Npc& npc)
 {
     assert(npcsStateInfo.find(npc.ID) != end(npcsStateInfo) && "Npc Explore logic was never defined");
-    auto& npcExploreInfo = npcsStateInfo.at(npc.ID);
+    auto& npcStateInfo = npcsStateInfo.at(npc.ID);
     Movement result = { HexDirection::CENTER, npc.hexID };
 
     std::stringstream ss;
@@ -24,60 +24,72 @@ const Movement StateMachine::Update(Npc& npc)
     bool retry = false;
     do
     {
-        switch (npcExploreInfo.objective)
+        switch (npcStateInfo.objective)
         {
         case State::Explore:
-            retry = npcExploreInfo.pathRecord.empty();// || npcExploreInfo.influenceZone.hasDiscoveredBetterInfluence();
-
-            if (retry) {
-                npcExploreInfo.objective = State::Init;
-            }
-            else {
-                result = getNextValidMovement(npc.ID);
-
-                auto hex = GameManager::getInstance().getMap().getHexByID(result.toHexID);
-                if (hex.isType(HexType::TileAttribute_Goal))
-                    npcExploreInfo.objective = State::OnGoal;
-                else if (hex.ID == npc.hexID) {
-                    GameManager::getInstance().getAIHelper().bb.setBestInfluenceHex(npcExploreInfo);
-                    npcExploreInfo.pathRecord = AStar::FindBestPath(npcExploreInfo);
+            if (npcStateInfo.pathRecord.empty()) {
+                if (GameManager::getInstance().getMap().getHexByID(npc.hexID).isType(HexType::TileAttribute_Goal))
+                {                 
+                    npcStateInfo.objective = State::OnGoal;
+                    retry = false;
+                }
+                else
+                {             
+                    npcStateInfo.objective = State::Init;
+                    retry = true;
                 }
             }
+            else {
+                auto temp = getNextValidMovement(npc.ID);
+
+                if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, temp.toHexID)) {
+                    result = temp;
+                    npcStateInfo.pathRecord.pop_back();
+                }                 
+                else 
+                    npcStateInfo.objective = State::Blocked;
+                
+                retry = false;
+            }
+            break;
+
+        case State::Blocked:
+            auto temp = getNextValidMovement(npc.ID);
+
+            if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, temp.toHexID)) {
+                result = temp;
+                npcStateInfo.pathRecord.pop_back();
+                npcStateInfo.objective = State::Explore;
+                retry = false;
+            }
+            else {
+                npcStateInfo.objective = State::Init;
+                retry = true;
+            }
+               
             break;
 
         case State::OnGoal:
             break;
 
-        case State::GoToGoal:
-            result = getNextValidMovement(npc.ID);
-            {
-                auto hex = GameManager::getInstance().getMap().getHexByID(result.toHexID);
-                if (hex.isType(HexType::TileAttribute_Goal))
-                    npcExploreInfo.objective = State::OnGoal;
-            }
-            retry = false;
-            break;
-
         case State::Init:
-            if (npcExploreInfo.npc.omniscient) {
-                npcExploreInfo.influenceZone.currentHighest.hexID = GameManager::getInstance().getAIHelper().bb.getBestGoal(npc.ID);
-                npcExploreInfo.objective = State::GoToGoal;
-            }
-            else {
-                GameManager::getInstance().getAIHelper().bb.setBestInfluenceHex(npcExploreInfo);
-                npcExploreInfo.objective = State::Explore;
-            }           
-            npcExploreInfo.pathRecord = AStar::FindBestPath(npcExploreInfo);          
+            if (npcStateInfo.npc.omniscient)
+                npcStateInfo.influenceZone.currentHighest.hexID = GameManager::getInstance().getAIHelper().bb.getBestGoal(npc.ID);
+            else 
+                GameManager::getInstance().getAIHelper().bb.setBestInfluenceHex(npcStateInfo);    
+
+            npcStateInfo.objective = State::Explore;
+            npcStateInfo.pathRecord = AStar::FindBestPath(npcStateInfo);          
             retry = true;
             break;
         }
     } while (retry);
 
-    for (auto i : npcExploreInfo.pathRecord) {
+    for (auto i : npcStateInfo.pathRecord) {
         ss << i.toHexID << ' ';
     }
 
-    ss << std::endl << " ToHexID:" << result.toHexID << " PathSize:" << npcExploreInfo.pathRecord.size();;
+    ss << std::endl << " ToHexID:" << result.toHexID << " PathSize:" << npcStateInfo.pathRecord.size();;
     DebugHelper::getInstance().Log(ss.str());
 
     return result;
@@ -89,13 +101,14 @@ const Movement StateMachine::getNextValidMovement(const unsigned int npcID) {
     assert(!npcStateInfo.pathRecord.empty() && "Npc explore path record is empty, no available move known");
     auto nextMovement = npcStateInfo.pathRecord.back();
 
-    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcID, nextMovement.toHexID)) {
-        nextMovement = npcStateInfo.pathRecord.back();
-        npcStateInfo.pathRecord.pop_back();
-    }
-    else {
-        nextMovement.direction = HexDirection::CENTER;
-    }
+    ////CHECK IF HEX IS AVAILABLE
+    //if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcID, nextMovement.toHexID)) {
+    //    nextMovement = npcStateInfo.pathRecord.back();
+    //    npcStateInfo.pathRecord.pop_back();
+    //}
+    //else {
+    //    nextMovement.direction = HexDirection::CENTER;
+    //}
 
     return nextMovement;
 }

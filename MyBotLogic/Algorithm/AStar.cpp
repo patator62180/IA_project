@@ -36,7 +36,7 @@ PathRecord AStar::FindBestPath(const NpcStateInfo& stateInfo) noexcept
             {
                 auto adjacenHex = map.getHexByID(edge.leadsToHexID);
 
-                if (! (hasBeenVisited(adjacenHex.ID, closed))) { // || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
+                if (! (hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
                    auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), currentRecord->movementCount+1);
                    // auto score = currentRecord->score + bb.data[adjacenHex.ID];
                    opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, currentRecord->movementCount + 1 });
