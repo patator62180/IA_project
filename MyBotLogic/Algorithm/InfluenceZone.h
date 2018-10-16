@@ -19,23 +19,17 @@ struct InfluenceHex {
 };
 
 using InfluenceData = std::vector<InfluenceHex>;
-//using InfluenceDataInTime = std::vector<InfluenceData>;
 
 class InfluenceZone {
-private:
-    unsigned int radius;
 
 public:
-    static const unsigned int GOAL_SCORE = 100;
-    InfluenceData dataInTime;
+    InfluenceData data;
     InfluenceHex currentHighest;
 
     InfluenceZone() = default;
-    InfluenceZone(const unsigned int);
 
     void Update(const std::set<unsigned int>&);
-    InfluenceHex consumeBestLatestHexID();
-    bool hasDiscoveredBetterInfluence();
+    InfluenceHex consumeBestInfluence();
 
 private:
     void createZone(const std::set<unsigned int>&);

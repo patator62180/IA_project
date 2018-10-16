@@ -31,7 +31,7 @@ const HexDirection PathHelper::getReverseDirection(const HexDirection d) noexcep
 
 inline const CoordAxial PathHelper::CalculateDirectionPos(const HexDirection d) noexcept
 {
-    return baseMovement.at(d);
+    return baseMovement[d];
 }
 
 inline const CoordAxial PathHelper::CalculatePos(const CoordAxial& p, const HexDirection d) noexcept
@@ -44,11 +44,18 @@ const CoordAxial PathHelper::CalculatePosOffset(const CoordAxial& p, const HexDi
     return AxialToOffset(CalculatePos(p,d));
 }
 
-const float PathHelper::DistanceBetween(const CoordAxial& cl, const CoordAxial& cr) noexcept {
+float PathHelper::DistanceBetween(const CoordAxial& cl, const CoordAxial& cr) noexcept {
     auto clY = -cl.x - cl.z;
     auto crY = -cr.x - cr.z;
     //TODO max(x+x, max(z+z, y+y))
     return static_cast<float>(sqrt( (cl.x - cr.x) * (cl.x - cr.x) + (clY - crY) * (clY - crY) + (cl.z - cr.z) * (cl.z - cr.z) ));
+}
+
+unsigned int PathHelper::HexCountBetween(const CoordAxial& cl, const CoordAxial& cr) noexcept {
+    return static_cast<unsigned int>(
+        std::max(
+            std::max(abs(cl.x - cr.x), abs(cl.z - cr.z)),
+            abs((-cl.x - cl.z) - (-cr.x - cr.z))));
 }
 
 const CoordAxial PathHelper::AxialToOffset(const CoordAxial& p) noexcept {

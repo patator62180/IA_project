@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 
-enum State { Init, Explore, Blocked, OnGoal };
+enum State { Init, Explore, ExploreOriented, Blocked, OnGoal };
 
 struct NpcStateInfo {
     Npc npc;
@@ -15,7 +15,10 @@ struct NpcStateInfo {
     std::vector<Movement> pathRecord;
     InfluenceZone influenceZone;
 
-    NpcStateInfo(const Npc&);
+    NpcStateInfo() = default;
+    NpcStateInfo(Npc&);
+
+    ~NpcStateInfo() = default;
 };
 
 class StateMachine

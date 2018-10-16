@@ -11,7 +11,8 @@ using PathRecord = std::vector<Movement>;
 class AStar
 {
 public:
-    static PathRecord FindBestPath(const NpcStateInfo&) noexcept;
+    static void SetBestPath(NpcStateInfo&) noexcept;
+    static void SetNearestUnvisited(NpcStateInfo&) noexcept;
 
 private:
     static PathRecord buildPath(const Record*) noexcept;

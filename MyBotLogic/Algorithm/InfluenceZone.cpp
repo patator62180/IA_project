@@ -9,14 +9,9 @@
 #include <cassert>
 #include <algorithm>
 
-InfluenceZone::InfluenceZone(const unsigned int radius)
-    :radius{ radius }
-{
-}
-
 void InfluenceZone::createZone(const std::set<unsigned int>& seenHexesID)
 {
-    dataInTime.clear();
+    data.clear();
     auto map = GameManager::getInstance().getMap();
     unsigned int influence = 0;
 
@@ -30,7 +25,7 @@ void InfluenceZone::createZone(const std::set<unsigned int>& seenHexesID)
             break;
 
         case HexType::TileAttribute_Goal:
-            influence = GOAL_SCORE;
+            influence = BlackBoard::GOAL_SCORE;
             GameManager::getInstance().getAIHelper().bb.UpdateGoal(hex.ID);
             break;
 
@@ -39,44 +34,32 @@ void InfluenceZone::createZone(const std::set<unsigned int>& seenHexesID)
         }
 
         if (influence > 0)
-            dataInTime.push_back({ ID, influence });   
+            data.push_back({ ID, influence });   
     }
 }
 
 void InfluenceZone::Update(const std::set<unsigned int>& seenHexesID) {
+    data.clear();
     createZone(seenHexesID);
 }
 
 
-InfluenceHex InfluenceZone::consumeBestLatestHexID() {
-
+InfluenceHex InfluenceZone::consumeBestInfluence() {
     InfluenceHex result{ 0,0 };
 
-    if (!dataInTime.empty())
+    if (!data.empty())
     {
-        auto maxIter = std::max_element(begin(dataInTime), end(dataInTime), [](const InfluenceHex& r, const InfluenceHex& l) {
+        auto maxIter = std::max_element(begin(data), end(data), [](const InfluenceHex& r, const InfluenceHex& l) {
             return r.score < l.score;
         });
         result = *maxIter;
 
-        dataInTime.erase(std::remove_if(begin(dataInTime), end(dataInTime), [&maxIter](InfluenceHex& ih) {
-            return ih.hexID == maxIter->hexID;
-        }), end(dataInTime));
-
-        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID))
-            return consumeBestLatestHexID();
+        //if there is an npc on that hex or hex has been visited, find the next best hex
+        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID) || !GameManager::getInstance().getAIHelper().bb.isUnvisited(result.hexID)) {
+            data.erase(maxIter);
+            return consumeBestInfluence();
+        }
     }
 
     return result;
-}
-
-bool InfluenceZone::hasDiscoveredBetterInfluence() {
-    if (dataInTime.empty())
-        return false;
-
-    auto maxIter = std::max_element(begin(dataInTime), end(dataInTime), [](const InfluenceHex& r, const InfluenceHex& l) {
-        return r.score < l.score;
-    });
-
-    return maxIter->hexID != currentHighest.hexID && maxIter->score > currentHighest.score;
 }

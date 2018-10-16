@@ -124,11 +124,11 @@ const bool Map::isDefinedInLayout(const CoordAxial& p) {
 }
 
 Hex& Map::getHexByID(const unsigned int ID) {
-    return layout.at(ID);
+    return layout[ID];
 }
 
 const Hex& Map::getHexByID(const unsigned int ID) const {
-    return layout.at(ID);
+    return layout[ID];
 }
 
 const Hex& Map::getHexByPosOff(const CoordAxial& p) const {

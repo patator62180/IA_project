@@ -29,11 +29,11 @@ void AIHelper::Update(const TurnInfo& turnInfo) {
 
     for (auto n : turnInfo.npcs) {
         npcsCurrentHexID.insert(n.second.tileID);
-        bb.UpdateNpc(stateMachine.npcsStateInfo.at(n.first), n.second.visibleTiles);
+        bb.UpdateNpc(stateMachine.npcsStateInfo[n.first], n.second.visibleTiles);
 
         ss << "-----Influence-----" << " NpcID:" << n.first << std::endl;;// << stateMachine.npcsStateInfo.at(n.first).influenceZone << std::endl;
 
-        for(auto data : stateMachine.npcsStateInfo.at(n.first).influenceZone.dataInTime)
+        for(auto data : stateMachine.npcsStateInfo[n.first].influenceZone.data)
                 ss << "HexID:" << data.hexID << ' '
                 << "Score:" << data.score << std::endl;
     }
@@ -62,7 +62,7 @@ bool AIHelper::TryAddNpcCurrentHexID(const unsigned int npcID, const unsigned in
     bool success = npcsCurrentHexID.insert(toAdd).second;
 
     if(success)
-        npcsCurrentHexID.erase(stateMachine.npcsStateInfo.at(npcID).npc.hexID);
+        npcsCurrentHexID.erase(stateMachine.npcsStateInfo[npcID].npc.hexID);
 
     return success;
 }

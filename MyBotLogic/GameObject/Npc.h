@@ -19,6 +19,7 @@ struct Npc
     unsigned int movementRange;
     bool omniscient;
 
+    Npc() = default;
     Npc(const unsigned int ID, const unsigned int hID, const unsigned int vr, const unsigned int mr, const bool& omniscient)
         : ID{ ID }, hexID{ hID }, visionRange{ vr }, movementRange{ mr }, omniscient{ omniscient }
     {}

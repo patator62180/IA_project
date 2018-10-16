@@ -25,13 +25,18 @@ class BlackBoard
 {
     friend class InfluenceZone;
 private:
-    const unsigned int UNINITIALIZED = 0;
-    const unsigned int ADJACENT_NOT_VISITED = 1;
+    static const unsigned int UNINITIALIZED = 0;
+    static const unsigned int MIN_VISITED_SCORE = 1;
+    static const unsigned int MAX_VISITED_SCORE = MIN_VISITED_SCORE + Hex::EDGES_COUNT;
 
-    const unsigned int MIN_VISITED_SCORE = 10;
+
+    static const unsigned int BASE_INFLUENCE_SCORE = 900;
+    static const unsigned int ASTAR_MAX_SCORE = BASE_INFLUENCE_SCORE - 1;
 
     Goals goals;
 public:
+
+    static const unsigned int GOAL_SCORE = 1000;
     BlackBoardData data;
 
     BlackBoard() = default;
@@ -39,9 +44,13 @@ public:
 
     void UpdateNpc(NpcStateInfo&, const std::set<unsigned int>&) noexcept;
     void UpdateGoal(const unsigned int) noexcept;
-    void setBestInfluenceHex(NpcStateInfo&);
+    void setBestPath(NpcStateInfo&);
+    void setBestPathToUnvisited(NpcStateInfo&);
 
-    unsigned int getBestGoal(const unsigned int);
+    bool isUnvisited(const unsigned int) const noexcept;
+    bool isHighValue(const unsigned int) const noexcept;
+
+    InfluenceHex getBestGoal(const unsigned int);
 
     ~BlackBoard() = default;
     friend std::ostream& operator<<(std::ostream& os, BlackBoard&);

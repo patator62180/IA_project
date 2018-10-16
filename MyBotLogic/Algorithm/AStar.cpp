@@ -5,10 +5,10 @@
 #include "../MapStructure/Hex.h"
 #include "../AIHelper.h"
 
+#include <deque>
 #include <algorithm>
 
-// TODO refacto getBestPath & getBestExplorePath into 1 function
-PathRecord AStar::FindBestPath(const NpcStateInfo& stateInfo) noexcept
+void AStar::SetBestPath(NpcStateInfo& stateInfo) noexcept
 {
     AStarRecord opened;
     AStarRecord closed;
@@ -19,7 +19,7 @@ PathRecord AStar::FindBestPath(const NpcStateInfo& stateInfo) noexcept
     auto bb = GameManager::getInstance().getAIHelper().bb;
 
     opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, 0));
-
+    //something FISHY 0
     do
     {
         auto currentRecord = *(opened.begin());
@@ -27,8 +27,10 @@ PathRecord AStar::FindBestPath(const NpcStateInfo& stateInfo) noexcept
         opened.erase(currentRecord);
         closed.insert(currentRecord);
 
-        if (currentHex.ID == hexGoal.ID)
-            return buildPath(currentRecord);
+        if (currentHex.ID == hexGoal.ID) {
+            stateInfo.pathRecord = std::move(buildPath(currentRecord));
+            return;
+        }
 
         for (auto edge : currentHex.edges)
         {
@@ -36,57 +38,44 @@ PathRecord AStar::FindBestPath(const NpcStateInfo& stateInfo) noexcept
             {
                 auto adjacenHex = map.getHexByID(edge.leadsToHexID);
 
-                if (! (hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
+                if (! (adjacenHex.isType(HexType::TileAttribute_Uninitialized) || hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID)) ){
                    auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), currentRecord->movementCount+1);
-                   // auto score = currentRecord->score + bb.data[adjacenHex.ID];
+                 //  score += bb.data[adjacenHex.ID];
                    opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, currentRecord->movementCount + 1 });
                 }
             }
         }
     } while (!opened.empty());
 
-    return { { HexDirection::CENTER, stateInfo.npc.hexID } };
+    stateInfo.pathRecord = { { HexDirection::CENTER, stateInfo.npc.hexID } };
+    return;
 }
-//
-//PathRecord AStar::FindBestExplorePath(const Npc& npc, const unsigned int hexIDToGo) noexcept
-//{
-//    AStarRecord opened;
-//    AStarRecord closed;
-//    auto map = GameManager::getInstance().getMap();
-//    auto currentHex = map.getHexByID(npc.hexID);
-//    auto hexGoal = map.getHexByID(hexIDToGo);
-//    auto obstacleHexID = GameManager::getInstance().getAIHelper().getNpcsCurrentHexID();
-//    auto bb = GameManager::getInstance().getAIHelper().bb;
-//
-//    opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, 0));
-//
-//    do
-//    {        
-//        auto currentRecord = *(opened.begin());
-//        currentHex = map.getHexByID(currentRecord->hexID);
-//        opened.erase(currentRecord);
-//        closed.insert(currentRecord);
-//
-//        if (currentHex.ID == hexIDToGo)
-//            return buildPath(currentRecord);
-//
-//        for (auto edge : currentHex.edges)
-//        {
-//            if (!edge.isBlocked)
-//            {
-//                auto adjacenHex = map.getHexByID(edge.leadsToHexID);
-//
-//                if (!(hasBeenVisited(adjacenHex.ID, closed) || isPathObstructed(obstacleHexID, adjacenHex.ID))) {
-//                   // auto score = bb.data[adjacenHex.ID];
-//                    auto score = Record::CalculateScore(PathHelper::DistanceBetween(hexGoal.position, adjacenHex.position), currentRecord->movementCount+1);;
-//                    opened.insert(new Record{ score , adjacenHex.ID, edge.direction, currentRecord, currentRecord->movementCount+1 });
-//                }
-//            }
-//        }
-//    } while (!opened.empty());
-//
-//    return { { HexDirection::CENTER, npc.hexID } };
-//}
+
+
+void AStar::SetNearestUnvisited(NpcStateInfo& stateInfo) noexcept {
+    auto map = GameManager::getInstance().getMap();
+    auto bb = GameManager::getInstance().getAIHelper().bb;
+
+    std::deque<unsigned int> hexIDToDo{ stateInfo.npc.hexID };
+
+    bool found = false;
+    while (!found) {
+        auto hex = map.getHexByID(hexIDToDo.front());
+        hexIDToDo.pop_front();
+
+        for (auto edge : hex.edges) {
+            if (!edge.isBlocked) {
+                if (bb.isUnvisited(edge.leadsToHexID))
+                {
+                    stateInfo.influenceZone.currentHighest = { edge.leadsToHexID, bb.data[edge.leadsToHexID] };
+                    found = true;
+                    break;
+                }
+                hexIDToDo.emplace_back(edge.leadsToHexID);
+            }
+        }
+    }
+}
 
 PathRecord AStar::buildPath(const Record* hr) noexcept
 {
