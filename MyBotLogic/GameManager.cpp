@@ -56,3 +56,8 @@ Map& GameManager::getMap() noexcept {
 AIHelper& GameManager::getAIHelper() noexcept {
     return AIhelper;
 }
+
+std::map<unsigned int, Movement>& GameManager::getTurnMove() noexcept
+{
+	return turnMove;
+}

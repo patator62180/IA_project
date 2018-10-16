@@ -22,6 +22,7 @@ private:
     Map map;
     AIHelper AIhelper;
     BlackBoard bb;
+	std::map<unsigned int, Movement> turnMove;
 
 public:
     static GameManager& getInstance();
@@ -32,6 +33,7 @@ public:
 
     Map& getMap() noexcept;
     AIHelper& getAIHelper() noexcept;
+	std::map<unsigned int, Movement>& getTurnMove() noexcept;
 
     ~GameManager() = default;
 };
