@@ -8,7 +8,7 @@
 
 class HexTypeNotHandle {};
 
-void Map::InitLayout(const int& rowCount_, const int& colCount_) noexcept {
+void Map::InitLayout(const int rowCount_, const int colCount_) noexcept {
     rowCount = rowCount_;
     colCount = colCount_;
     layout.reserve(rowCount*colCount);
@@ -51,7 +51,7 @@ void Map::updateHexes(const TurnInfo& ti)
             if (!hex.areAllEdgesBlocked()) {
                 switch (hex.type) {
                 case HexType::TileAttribute_Goal:
-                    GameManager::getInstance().getAIHelper().bb.UpdateGoal(hex.ID);
+                    GameManager::getInstance().getAIHelper().blackBoard.UpdateGoal(hex.ID);
                     break;
 
                 case HexType::TileAttribute_Forbidden:
@@ -101,14 +101,7 @@ void Map::updateObjects(const TurnInfo& li) noexcept {
     });
 }
 
-const CoordAxial Map::hexIDToAxial(const unsigned int ID) noexcept {
-    int x = ID % colCount;
-    int z = ID / colCount;
-
-    return { x - (z - (z & 1)) / 2, z };
-}
-
-const unsigned int Map::hexPosOffToID(const CoordAxial& c) const noexcept {
+unsigned int Map::hexPosOffToID(const CoordAxial& c) const noexcept {
     return c.z * colCount + c.x;
 }
 
@@ -119,7 +112,7 @@ const std::pair<bool, unsigned int> Map::isWorthAdding(const Hex& hex, const Hex
     return { isDefinedInLayout(neighborPosOff), hexIDToAdd };
 };
 
-const bool Map::isDefinedInLayout(const CoordAxial& p) {
+bool Map::isDefinedInLayout(const CoordAxial& p) {
     return !(p.x < 0 || p.x > colCount - 1 || p.z < 0 || p.z > rowCount - 1);
 }
 

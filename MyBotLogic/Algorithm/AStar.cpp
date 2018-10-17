@@ -14,9 +14,9 @@ void AStar::SetBestPath(NpcStateInfo& stateInfo) noexcept
     AStarRecord closed;
     auto map = GameManager::getInstance().getMap();
     auto currentHex = map.getHexByID(stateInfo.npc.hexID);
-    auto hexGoal = map.getHexByID(stateInfo.influenceZone.currentHighest.hexID);
+    auto hexGoal = map.getHexByID(stateInfo.currentHighest.hexID);
     auto obstacleHexID = GameManager::getInstance().getAIHelper().getNpcsCurrentHexID();
-    auto bb = GameManager::getInstance().getAIHelper().bb;
+    auto bb = GameManager::getInstance().getAIHelper().blackBoard;
 
     opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, 0));
     do
@@ -46,14 +46,14 @@ void AStar::SetBestPath(NpcStateInfo& stateInfo) noexcept
         }
     } while (!opened.empty());
 
-    stateInfo.pathRecord = { { HexDirection::CENTER, stateInfo.npc.hexID } };
+    stateInfo.pathRecord = { };
     return;
 }
 
 
 void AStar::SetNearestUnvisited(NpcStateInfo& stateInfo) noexcept {
     auto map = GameManager::getInstance().getMap();
-    auto bb = GameManager::getInstance().getAIHelper().bb;
+    auto bb = GameManager::getInstance().getAIHelper().blackBoard;
 
     std::deque<unsigned int> hexIDToDo{ stateInfo.npc.hexID };
 
@@ -66,7 +66,7 @@ void AStar::SetNearestUnvisited(NpcStateInfo& stateInfo) noexcept {
             if (!edge.isBlocked) {
                 if (bb.isUnvisited(edge.leadsToHexID))
                 {
-                    stateInfo.influenceZone.currentHighest = { edge.leadsToHexID, bb.data[edge.leadsToHexID] };
+                    stateInfo.currentHighest = { edge.leadsToHexID, bb.data[edge.leadsToHexID] };
                     found = true;
                     break;
                 }
@@ -86,12 +86,12 @@ PathRecord AStar::buildPath(const Record* hr) noexcept
     return pr;
 }
 
-inline const bool AStar::hasBeenVisited(const unsigned int id, const AStarRecord& ahr) noexcept {
+inline bool AStar::hasBeenVisited(const unsigned int id, const AStarRecord& ahr) noexcept {
     return std::find_if(begin(ahr), end(ahr), [&id](Record* hr) {
         return hr->hexID == id;
     }) != end(ahr);
 }
 
-inline const bool AStar::isPathObstructed(const std::set<unsigned int>& obstacleHexIDs, const unsigned int id) noexcept {
+inline bool AStar::isPathObstructed(const std::set<unsigned int>& obstacleHexIDs, const unsigned int id) noexcept {
     return std::find(begin(obstacleHexIDs), end(obstacleHexIDs), id) != end(obstacleHexIDs);
 }

@@ -22,13 +22,11 @@ private:
 public:
     Map() = default;
 
-    void InitLayout(const int&, const int&) noexcept;
+    void InitLayout(const int, const int) noexcept;
     void Update(const TurnInfo&);
  
     Array2D& Map::getLayout() noexcept;
     const Array2D& getLayout() const noexcept;
-
-    
     Hex& getHexByID(const unsigned int);
     const Hex& getHexByID(const unsigned int) const;
     const Hex& getHexByPosOff(const CoordAxial&) const;
@@ -42,11 +40,9 @@ private:
     void connectHex(const TurnInfo&) noexcept;
     void updateObjects(const TurnInfo&) noexcept;
 
-    const CoordAxial hexIDToAxial(const unsigned int ID) noexcept;
-    const unsigned int hexPosOffToID(const CoordAxial&) const noexcept;
+    unsigned int hexPosOffToID(const CoordAxial&) const noexcept;
 
-    const bool isDefinedInLayout(const CoordAxial&);
-
+    bool isDefinedInLayout(const CoordAxial&);
     const bool isHexAvailable(const unsigned int) noexcept;
 };
 

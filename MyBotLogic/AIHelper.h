@@ -15,7 +15,7 @@ private:
     std::set<unsigned int> npcsCurrentHexID;
 
 public:
-    BlackBoard bb;
+    BlackBoard blackBoard;
 
     AIHelper() = default;
     void Init(const LevelInfo&);

@@ -21,17 +21,6 @@ struct Edge
     void setPropertyByType(const EdgeType typeToApply) {
         type = typeToApply;
         isBlocked = true;
-        //switch (type) {
-        //case EdgeType::ObjectType_Wall:
-        //    isBlocked = true;
-        //    break;
-
-        //case EdgeType::ObjectType_Window:
-        //    isBlocked = true;
-        //    break;
-        //default:
-        //    break;
-        //}
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Edge&);

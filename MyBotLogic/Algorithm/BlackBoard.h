@@ -40,7 +40,7 @@ public:
     BlackBoardData data;
 
     BlackBoard() = default;
-    void Init(const size_t&) noexcept;
+    void Init(const size_t) noexcept;
 
     void UpdateNpc(NpcStateInfo&, const std::set<unsigned int>&) noexcept;
     void UpdateGoal(const unsigned int) noexcept;

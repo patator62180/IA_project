@@ -24,7 +24,6 @@ class InfluenceZone {
 
 public:
     InfluenceData data;
-    InfluenceHex currentHighest;
 
     InfluenceZone() = default;
 

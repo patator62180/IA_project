@@ -10,7 +10,7 @@
 
 void AIHelper::Init(const LevelInfo& levelInfo)
 {
-    bb.Init(levelInfo.rowCount * levelInfo.colCount);
+    blackBoard.Init(levelInfo.rowCount * levelInfo.colCount);
 
     for (auto npc : levelInfo.npcs)
         stateMachine.npcsStateInfo.insert( { npc.first, Npc{
@@ -29,7 +29,7 @@ void AIHelper::Update(const TurnInfo& turnInfo) {
 
     for (auto n : turnInfo.npcs) {
         npcsCurrentHexID.insert(n.second.tileID);
-        bb.UpdateNpc(stateMachine.npcsStateInfo[n.first], n.second.visibleTiles);
+        blackBoard.UpdateNpc(stateMachine.npcsStateInfo[n.first], n.second.visibleTiles);
 
         ss << "-----Influence-----" << " NpcID:" << n.first << std::endl;;// << stateMachine.npcsStateInfo.at(n.first).influenceZone << std::endl;
 
@@ -39,7 +39,7 @@ void AIHelper::Update(const TurnInfo& turnInfo) {
     }
 
     ss << "-----BlackBoard-----" << std::endl
-        << bb << std::endl;
+        << blackBoard << std::endl;
     DebugHelper::getInstance().Log(ss.str());
 }
 
@@ -64,6 +64,9 @@ bool AIHelper::TryAddNpcCurrentHexID(NpcStateInfo& npcStateInfo)
     if (success) {
         npcsCurrentHexID.erase(npcStateInfo.npc.hexID);
         npcStateInfo.pathRecord.pop_back();
+    }
+    else {
+        npcStateInfo.objective = State::Blocked;
     }
 
     return success;

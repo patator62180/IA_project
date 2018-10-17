@@ -17,8 +17,8 @@ public:
 private:
     static PathRecord buildPath(const Record*) noexcept;
 
-    static const bool hasBeenVisited(const unsigned int, const AStarRecord&) noexcept;
-    static const bool isPathObstructed(const std::set<unsigned int>&, const unsigned int) noexcept;
+    static bool hasBeenVisited(const unsigned int, const AStarRecord&) noexcept;
+    static bool isPathObstructed(const std::set<unsigned int>&, const unsigned int) noexcept;
 };
 
 #endif // A_STAR_H

@@ -26,7 +26,7 @@ void InfluenceZone::createZone(const std::set<unsigned int>& seenHexesID)
 
         case HexType::TileAttribute_Goal:
             influence = BlackBoard::GOAL_SCORE;
-            GameManager::getInstance().getAIHelper().bb.UpdateGoal(hex.ID);
+            GameManager::getInstance().getAIHelper().blackBoard.UpdateGoal(hex.ID);
             break;
 
         default:
@@ -55,7 +55,7 @@ InfluenceHex InfluenceZone::consumeBestInfluence() {
         result = *maxIter;
 
         //if there is an npc on that hex or hex has been visited, find the next best hex
-        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID) || !GameManager::getInstance().getAIHelper().bb.isUnvisited(result.hexID)) {
+        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID) || !GameManager::getInstance().getAIHelper().blackBoard.isUnvisited(result.hexID)) {
             data.erase(maxIter);
             return consumeBestInfluence();
         }

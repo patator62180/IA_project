@@ -26,17 +26,11 @@ struct Npc
     ~Npc() = default;
 
     friend std::ostream& operator<<(std::ostream&, Npc);
-
 };
 
 inline std::ostream& operator<<(std::ostream &os, Npc n)
 {
-    os << "Id:" << n.ID << ' ';
-
-    //for (auto movement : n.pathRecord)
-    //    os << movement.direction << ':' << movement.toHexID << ' ';
-
-    return os << std::endl;
+    return os << "Id:" << n.ID << " HexID:" << n.hexID;
 }
 
 #endif // #ifndef NPC_H

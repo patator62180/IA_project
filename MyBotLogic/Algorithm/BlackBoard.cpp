@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <deque>
 
-void BlackBoard::Init(const size_t& size) noexcept
+void BlackBoard::Init(const size_t size) noexcept
 {
     data.resize(size);
 }
@@ -51,8 +51,10 @@ void BlackBoard::UpdateGoal(const unsigned int goalHexID) noexcept {
 }
 
 void BlackBoard::setBestPath(NpcStateInfo& npcInfo) {
-
-    auto bestResult = npcInfo.influenceZone.consumeBestInfluence();
+    // npcExploreInfo.influenceZone.currentHighest.hexID = GameManager::getInstance().getAIHelper().bb.getBestGoal();
+    auto bestResult = (npcInfo.npc.omniscient) ? 
+        getBestGoal(npcInfo.npc.ID) :
+        npcInfo.influenceZone.consumeBestInfluence();
 
     //true if didnt find anything of interest
     if (bestResult.score == 0) {
@@ -60,7 +62,7 @@ void BlackBoard::setBestPath(NpcStateInfo& npcInfo) {
         npcInfo.objective = State::Explore;
     }
     else {
-        npcInfo.influenceZone.currentHighest = bestResult;
+        npcInfo.currentHighest = bestResult;
         npcInfo.objective = State::ExploreOriented;
     }
        

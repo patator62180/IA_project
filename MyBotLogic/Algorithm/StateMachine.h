@@ -14,6 +14,7 @@ struct NpcStateInfo {
     State objective = State::Init;
     std::vector<Movement> pathRecord;
     InfluenceZone influenceZone;
+    InfluenceHex currentHighest;
 
     NpcStateInfo() = default;
     NpcStateInfo(Npc&);
@@ -26,12 +27,10 @@ class StateMachine
 public:
     std::map<unsigned int, NpcStateInfo> npcsStateInfo;
 
-    const Movement Update(Npc&);
+    Movement Update(Npc&);
 
     StateMachine() = default;
     ~StateMachine() = default;
-private:
-    const Movement getNextValidMovement(const unsigned int);
 };
 
 #endif // !STATE_MACHINE_H
