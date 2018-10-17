@@ -57,12 +57,14 @@ void AIHelper::FillActionList(std::vector<Action*>& actionList)
     }
 }
 
-bool AIHelper::TryAddNpcCurrentHexID(const unsigned int npcID, const unsigned int toAdd)
+bool AIHelper::TryAddNpcCurrentHexID(NpcStateInfo& npcStateInfo)
 {
-    bool success = npcsCurrentHexID.insert(toAdd).second;
+    bool success = npcsCurrentHexID.insert(npcStateInfo.pathRecord.back().toHexID).second;
 
-    if(success)
-        npcsCurrentHexID.erase(stateMachine.npcsStateInfo[npcID].npc.hexID);
+    if (success) {
+        npcsCurrentHexID.erase(npcStateInfo.npc.hexID);
+        npcStateInfo.pathRecord.pop_back();
+    }
 
     return success;
 }

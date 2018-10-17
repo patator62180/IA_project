@@ -19,7 +19,6 @@ void AStar::SetBestPath(NpcStateInfo& stateInfo) noexcept
     auto bb = GameManager::getInstance().getAIHelper().bb;
 
     opened.insert(new Record(0, currentHex.ID, HexDirection::CENTER, nullptr, 0));
-    //something FISHY 0
     do
     {
         auto currentRecord = *(opened.begin());

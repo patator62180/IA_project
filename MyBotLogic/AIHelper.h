@@ -24,7 +24,7 @@ public:
     void FillActionList(std::vector<Action*>&);
 
     bool isHexIDOccupied(const unsigned int);
-    bool TryAddNpcCurrentHexID(const unsigned int, const unsigned int);
+    bool TryAddNpcCurrentHexID(NpcStateInfo&);
 
     const std::set<unsigned int>& getNpcsCurrentHexID() noexcept;
 

@@ -30,28 +30,25 @@ const Movement StateMachine::Update(Npc& npc)
         {
         case State::Explore:
         {
+            //does npc have path?
             if (npcStateInfo.pathRecord.empty())
             {
+                //get one and retry, could lead to infinite loop but we good for now
                 GameManager::getInstance().getAIHelper().bb.setBestPath(npcStateInfo);
                 retry = true;
                 break;
             }
    
-            auto temp = getNextValidMovement(npc.ID);
-
+            auto temp = npcStateInfo.pathRecord.back();
             //is next hex available?
-            if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, temp.toHexID)) {
+            if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcStateInfo))
                 // we got a valid move!
                 result = temp;
-                npcStateInfo.pathRecord.pop_back();
-                retry = false;
-            }
             else
-            {
                 // skip turn, a npc is probably on the hex we want to go
                 npcStateInfo.objective = State::Blocked;
-                retry = false;
-            }
+
+            retry = false;
 
             break;
         }
@@ -69,9 +66,9 @@ const Movement StateMachine::Update(Npc& npc)
                     //no, then we need a new path to the same goal
                     GameManager::getInstance().getAIHelper().bb.setBestPath(npcStateInfo);
 
-                    //if no path
+                    //does the npc have a path?
                     if (npcStateInfo.pathRecord.empty()) {
-                        //we are already at the best distance from goal, we need to explore to find a path
+                        //then we are already at the best distance from goal, we need to explore to find a path
                         npcStateInfo.objective = State::Explore;
                     }
 
@@ -79,33 +76,43 @@ const Movement StateMachine::Update(Npc& npc)
                 }
             }
             else {
-                auto temp = getNextValidMovement(npc.ID);
+                //check if edge blocks, small flaw when generating path with unseen objects 
+                if (map.getHexByID(npc.hexID).edges[npcStateInfo.pathRecord.back().direction].isBlocked) {
+                    //find a new path
+                    AStar::SetBestPath(npcStateInfo);
+                    //true if the npc hex is the closest to the goal, it means we dont know a better path
+                    if (npcStateInfo.pathRecord.back().direction == HexDirection::CENTER) {
+                        //so go explore!
+                        GameManager::getInstance().getAIHelper().bb.setBestPathToUnvisited(npcStateInfo);
+                        npcStateInfo.objective = State::Explore;
+                    }
 
-                //is next hex available?
-                if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, temp.toHexID)) {
-                    // we got a valid move!
-                    result = temp;
-                    npcStateInfo.pathRecord.pop_back();
+                    retry = true;
                 }
-                else
-                {
-                    // skip turn, a npc is probably on the hex we want to go
-                    npcStateInfo.objective = State::Blocked;
-                }
+                else {
+                    auto temp = npcStateInfo.pathRecord.back();
+                    //is next hex available?
+                    if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcStateInfo))
+                        // we got a valid move!
+                        result = temp;
+                    else
+                        // skip turn, a npc is probably on the hex we want to go
+                        npcStateInfo.objective = State::Blocked;
 
-                retry = false;
+                    retry = false;
+                }
             }
 
             break;
         case State::Blocked:
-            auto temp = getNextValidMovement(npc.ID);
+            auto temp = npcStateInfo.pathRecord.back();
 
             // can we do the last move we tried?
-            if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npc.ID, temp.toHexID)) {
+            if (GameManager::getInstance().getAIHelper().TryAddNpcCurrentHexID(npcStateInfo)) {
                 // we got a valid move!
                 result = temp;
-                npcStateInfo.pathRecord.pop_back();
 
+                //set the previous state before being blocked
                 if(GameManager::getInstance().getAIHelper().bb.isHighValue(npcStateInfo.influenceZone.currentHighest.score))
                     npcStateInfo.objective = State::ExploreOriented;
                 else
@@ -115,7 +122,7 @@ const Movement StateMachine::Update(Npc& npc)
             }
             else {
                 // a npc on a goal tile is probably on the hex we want to go... tss! get a new path
-                npcStateInfo.objective = State::Init;
+                GameManager::getInstance().getAIHelper().bb.setBestPath(npcStateInfo);
                 retry = true;
             }
                
@@ -151,13 +158,4 @@ const Movement StateMachine::Update(Npc& npc)
     DebugHelper::getInstance().Log(ss.str());
 
     return result;
-}
-
-const Movement StateMachine::getNextValidMovement(const unsigned int npcID) {
-    auto& npcStateInfo = npcsStateInfo[npcID];
-
-    assert(!npcStateInfo.pathRecord.empty() && "Npc explore path record is empty, no available move known");
-    auto nextMovement = npcStateInfo.pathRecord.back();
-
-    return nextMovement;
 }

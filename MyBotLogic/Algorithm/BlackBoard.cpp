@@ -68,7 +68,6 @@ void BlackBoard::setBestPath(NpcStateInfo& npcInfo) {
 }
 
 void BlackBoard::setBestPathToUnvisited(NpcStateInfo& npcInfo) {
-
     AStar::SetNearestUnvisited(npcInfo);
     AStar::SetBestPath(npcInfo);
     npcInfo.objective = State::Explore;
