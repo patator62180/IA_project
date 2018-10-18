@@ -48,8 +48,8 @@ SET( AIBOT_HEADERS
 	
 	MyBotLogic/Algorithm/AStar.h
 	MyBotLogic/Algorithm/BlackBoard.h
-	MyBotLogic/Algorithm/GoalState.h
-	MyBotLogic/Algorithm/ExploreState.h
+	MyBotLogic/Algorithm/StateMachine.h
+	MyBotLogic/Algorithm/InfluenceZone.h
 	MyBotLogic/Algorithm/Record.h
 	MyBotLogic/Algorithm/BehaviourTree.h
 	
@@ -90,9 +90,9 @@ SET( AIBOT_SRC
 	
 	MyBotLogic/Algorithm/AStar.cpp
 	MyBotLogic/Algorithm/BlackBoard.cpp
-	MyBotLogic/Algorithm/GoalState.cpp
-	MyBotLogic/Algorithm/ExploreState.cpp
 	MyBotLogic/Algorithm/BehaviourTree.cpp
+	MyBotLogic/Algorithm/StateMachine.cpp
+	MyBotLogic/Algorithm/InfluenceZone.cpp
 	
 	MyBotLogic/GameObject/Map.cpp
 	

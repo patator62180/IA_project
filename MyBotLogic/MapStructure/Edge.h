@@ -8,19 +8,19 @@
 struct Edge
 {
     unsigned int leadsToHexID;
+    EdgeType type = EdgeType::ObjectType_None;
     HexDirection direction;
     bool isBlocked = false;
-    bool canSeeThrough = true;
 
     Edge() = default;
 
-    Edge(const unsigned int& leadsToHexID, const HexDirection& direction, const bool& isBlocked)
+    Edge(const unsigned int leadsToHexID, const HexDirection direction, const bool isBlocked)
         :leadsToHexID{ leadsToHexID }, direction{ direction }, isBlocked{ isBlocked }
     {}
 
-    void setVisionProperty(const bool& seeThrough) {
+    void setPropertyByType(const EdgeType typeToApply) {
+        type = typeToApply;
         isBlocked = true;
-        canSeeThrough = seeThrough;
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Edge&);

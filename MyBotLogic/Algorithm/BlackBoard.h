@@ -1,80 +1,73 @@
 #ifndef BLACKBOARD_H
 #define BLACKBOARD_H
 
-#include "../GameObject/Map.h"
-#include "../GameObject/Npc.h"
-#include "NPCInfo.h"
+#include "StateMachine.h"
+#include "InfluenceZone.h"
 
 #include <vector>
+#include <ostream>
 
-using BlackBoardData = std::vector<int>;
+using BlackBoardData = std::vector<unsigned int>;
+
+struct Goal {
+    unsigned int hexID;
+    std::pair<bool, unsigned int> available{ true, 0 };
+
+    Goal(const unsigned int hexID)
+        :hexID{ hexID }
+    {};
+
+    ~Goal() = default;
+};
+using Goals = std::vector<Goal>;
 
 class BlackBoard
 {
+    friend class InfluenceZone;
 private:
-    const int UNITIALIZED = -1;
-    const int GOAL_SCORE = 1000;
+    static const unsigned int UNINITIALIZED = 0;
+    static const unsigned int MIN_VISITED_SCORE = 1;
+    static const unsigned int MAX_VISITED_SCORE = MIN_VISITED_SCORE + Hex::EDGES_COUNT;
 
-    const int MIN_REAL_SCORE = 0;
-    const int MAX_REAL_SCORE = 5;
-    const int MIN_TEMP_SCORE = 10;
-    const int MAX_TEMP_SCORE = GOAL_SCORE - 1;
 
+    static const unsigned int BASE_INFLUENCE_SCORE = 900;
+    static const unsigned int ASTAR_MAX_SCORE = BASE_INFLUENCE_SCORE - 1;
+
+    Goals goals;
 public:
+
+    static const unsigned int GOAL_SCORE = 1000;
     BlackBoardData data;
 
     BlackBoard() = default;
+    void Init(const size_t) noexcept;
 
-    void Init(const size_t& size)
-    {
-        data = BlackBoardData(size, UNITIALIZED);
-    }
+    void UpdateNpc(NpcStateInfo&, const std::set<unsigned int>&) noexcept;
+    void UpdateGoal(const unsigned int) noexcept;
+    void setBestPath(NpcStateInfo&);
+    void setBestPathToUnvisited(NpcStateInfo&);
 
-    void Update(const Map& map, const TurnInfo& turnInfos) {
-        for (auto npcInfo : turnInfos.npcs) {
-            auto npcHex = map.getConstHexByID(npcInfo.second.tileID);
-            data[npcHex.ID] = getRealVisionScore(npcHex);
+    bool isUnvisited(const unsigned int) const noexcept;
+    bool isHighValue(const unsigned int) const noexcept;
 
-            for (auto hexID : npcInfo.second.visibleTiles) {
-                if (needUpdate(data[hexID])) {
-                    auto hex = map.getConstHexByID(hexID);
-                    auto score = hex.isGoal() ? GOAL_SCORE : getTempVisionScore(hex, turnInfos.turnNb);
-                    data[hex.ID] = score;
-                }
-            }
-        }
-    }
-
-    const int getTempVisionScore(const Hex& h, const unsigned int& turnNb) {
-        return getRealVisionScore(h) + turnNb;
-    }
-
-    const int getRealVisionScore(const Hex& h) {
-        return static_cast<int>(std::count_if(begin(h.edges), end(h.edges), [](const Edge& e) {
-            return e.canSeeThrough;
-        }));
-    }
-
-    const bool needUpdate(const int& score) {
-        return score == UNITIALIZED;
-    }
-
-    unsigned int getBestHexIDToGo() {
-        auto maxIter = std::max_element(begin(data), end(data));
-        return static_cast<unsigned int>(std::distance(begin(data), maxIter));
-    }
+    InfluenceHex getBestGoal(const unsigned int);
 
     ~BlackBoard() = default;
-
     friend std::ostream& operator<<(std::ostream& os, BlackBoard&);
+
+private:
+    bool hasBeenVisited(const unsigned int) const;
 };
 
 inline std::ostream& operator<<(std::ostream& os, BlackBoard& h)
 {
     int cpt = 0;
-    for (auto data : h.data) {
-        os << "hexID:" << cpt++ << ' '
-            << "Prob:" << data << std::endl;
+    for (auto score : h.data) {
+        if(score != 0)
+            os  << " HexID:" << cpt << ' '
+                << " Score:" << score << std::endl;
+
+        ++cpt;
     }
 
     return os;

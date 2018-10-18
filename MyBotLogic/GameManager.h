@@ -7,15 +7,12 @@
 #include "GameObject\Npc.h"
 #include "Algorithm/BlackBoard.h"
 #include "Algorithm/BehaviourTree.h"
-
 #include "LevelInfo.h"
 #include "TurnInfo.h"
 #include "BT/Node.h"
 #include "BT/Selector.h"
 
 #include <map>
-
-
 
 class GameManager : Singleton
 {
@@ -38,7 +35,8 @@ public:
     Map& getMap() noexcept;
     AIHelper& getAIHelper() noexcept;
 	std::map<unsigned int, Movement>& getTurnMove() noexcept;
-
+	
+protected:
     ~GameManager() = default;
 };
 

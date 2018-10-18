@@ -1,12 +1,8 @@
 #include "GameManager.h"
 
-#include "Algorithm\AStar.h"
 #include "Utils\DebugHelper.h"
 
-#include <set>
-#include <algorithm>
 #include <sstream>
-#include <assert.h>
 
 class NpcWithoutObjective {};
 
@@ -30,21 +26,22 @@ void GameManager::Init(const LevelInfo& levelInfo)
     bb.Init(map.getLayout().size());
     AIhelper = { levelInfo };
 	bt = BehaviourTree();
-
+    AIhelper.Init(levelInfo);
+ //   AIhelper.Update(turnInfo);
 
 }
 
 void GameManager::Update(const TurnInfo& turnInfo)
 {
     std::stringstream ss;
-    ss << std::endl << "Turn:" << turnInfo.turnNb << std::endl;
+    ss << std::endl << std::endl << std::endl
+        << "--------------------------------------------------------" << std::endl
+        << "Turn:" << turnInfo.turnNb << std::endl
+        << "--------------------------------------------------------" << std::endl;
     DebugHelper::getInstance().Log(ss.str());
 
     map.Update(turnInfo);
     AIhelper.Update(turnInfo);
-    bb.Update(map, turnInfo);
-
-    auto a = 9;
 }
 
 void GameManager::FillActionList(std::vector<Action*>& actionList)
