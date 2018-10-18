@@ -1,5 +1,4 @@
 #include "Map.h"
-#include "ObjectInfo.h"
 #include "..\Utils\PathHelper.h"
 #include "..\Utils\DebugHelper.h"
 
@@ -7,7 +6,9 @@
 #include <cassert>
 #include <algorithm>
 
-void Map::InitLayout(const int& rowCount_, const int& colCount_) noexcept {
+class HexTypeNotHandle {};
+
+void Map::InitLayout(const int rowCount_, const int colCount_) noexcept {
     rowCount = rowCount_;
     colCount = colCount_;
     layout.reserve(rowCount*colCount);
@@ -30,92 +31,112 @@ void Map::InitLayout(const int& rowCount_, const int& colCount_) noexcept {
 
 void Map::Update(const TurnInfo& ti) {
     updateHexes(ti);
-    connectHexes();
     updateObjects(ti);
 
-    std::stringstream ss;
-    ss << "-----MAP-----" << std::endl << *this;
-    DebugHelper::getInstance().Log(ss.str());
+    //std::stringstream ss;
+    //ss << "-----MAP-----" << std::endl << *this;
+    //DebugHelper::getInstance().Log(ss.str());
 }
 
-void Map::updateHexes(const TurnInfo& ti) noexcept
+void Map::updateHexes(const TurnInfo& ti)
 {
-    for (auto tile : ti.tiles)
-        getHexByID(tile.second.tileID).type = tile.second.tileType;
-}
+    connectHex(ti);
 
-void Map::connectHexes() noexcept
-{
-    for (auto& hex : layout)
-        for (auto i = 0; i < Hex::EDGES_COUNT; ++i)
-        {
-            auto direction = static_cast<HexDirection>(i);
-            auto result = isWorthAdding(hex, direction);
-            if (result.first && !hex.edges[direction].isBlocked) {
-                hex.edges[direction] = Edge{result.second, direction, !isHexAvailable(result.second) };
-            }
-            else {
-                hex.edges[direction].isBlocked = true;
+    for (auto tile : ti.tiles) {
+        auto& hex = getHexByID(tile.second.tileID);
+
+        if (hex.isType(HexType::TileAttribute_Uninitialized)) {
+            hex.type = tile.second.tileType;
+
+            if (!hex.areAllEdgesBlocked()) {
+                switch (hex.type) {
+                case HexType::TileAttribute_Goal:
+                    GameManager::getInstance().getAIHelper().blackBoard.UpdateGoal(hex.ID);
+                    break;
+
+                case HexType::TileAttribute_Forbidden:
+                    for (auto edge : hex.edges)
+                        getHexByID(edge.leadsToHexID).edges[PathHelper::getReverseDirection(edge.direction)].isBlocked = true;
+                    break;
+
+                default:
+                    break;
+                }
             }
         }
+    }
+}
+
+void Map::connectHex(const TurnInfo& ti) noexcept
+{
+    for (auto tile : ti.tiles) {
+        auto& hex = getHexByID(tile.second.tileID);
+
+        for (auto edge : hex.edges)
+            if (!edge.isBlocked) {
+                auto result = isWorthAdding(hex, edge.direction);
+
+                if (result.first)
+                    hex.edges[edge.direction] = Edge{ result.second, edge.direction, false };
+                else
+                    hex.edges[edge.direction].isBlocked = true;
+            }
+    }
 }
 
 void Map::updateObjects(const TurnInfo& li) noexcept {
     for_each(begin(li.objects), end(li.objects), [&](std::pair<unsigned int, ObjectInfo> pair) {
-        auto objectInfo = pair.second;
-        if (!objectInfo.objectTypes.count(Object::ObjectType_PressurePlate))
-        {
-            bool isWindow = objectInfo.objectTypes.count(Object::ObjectType_Window);
-            auto& hex = getHexByID(pair.second.tileID);
-
-            hex.edges[objectInfo.position].setVisionProperty(isWindow);
-
-            auto adjacentHexPosOff = PathHelper::CalculatePosOffset(hex.position, objectInfo.position);
+        auto& hex = getHexByID(pair.second.tileID);
+        for (auto edgeType : pair.second.objectTypes) {
+            hex.edges[pair.second.position].setPropertyByType(edgeType);
+        }
+              
+        auto adjacentHexPosOff = PathHelper::CalculatePosOffset(hex.position, pair.second.position);
+        for (auto edgeType : pair.second.objectTypes) {  
             if (isDefinedInLayout(adjacentHexPosOff)) {
                 auto& adjacentHex = getHexByID(hexPosOffToID(adjacentHexPosOff));
-                adjacentHex.edges[PathHelper::getReverseDirection(objectInfo.position)].setVisionProperty(isWindow);
+                adjacentHex.edges[PathHelper::getReverseDirection(pair.second.position)].setPropertyByType(edgeType);
             }
-            
         }
     });
 }
 
-const CoordAxial Map::hexIDToAxial(const unsigned int& ID) noexcept {
-    int x = ID % colCount;
-    int z = ID / colCount;
-
-    return { x - (z - (z & 1)) / 2, z };
-}
-
-const unsigned int Map::hexPosOffToID(const CoordAxial& c) noexcept {
+unsigned int Map::hexPosOffToID(const CoordAxial& c) const noexcept {
     return c.z * colCount + c.x;
 }
 
-const std::pair<bool, unsigned int> Map::isWorthAdding(const Hex& hex, const HexDirection& direction) {
+const std::pair<bool, unsigned int> Map::isWorthAdding(const Hex& hex, const HexDirection direction) {
     auto neighborPosOff = PathHelper::CalculatePosOffset(hex.position, direction);
     auto hexIDToAdd = hexPosOffToID(neighborPosOff);
 
     return { isDefinedInLayout(neighborPosOff), hexIDToAdd };
 };
 
-const bool Map::isDefinedInLayout(const CoordAxial& p) {
+bool Map::isDefinedInLayout(const CoordAxial& p) {
     return !(p.x < 0 || p.x > colCount - 1 || p.z < 0 || p.z > rowCount - 1);
 }
 
-Hex& Map::getHexByID(const unsigned int& ID) {
-    assert(layout.size() > ID && "hex ID doesn't exist");
-    return layout.at(ID);
+Hex& Map::getHexByID(const unsigned int ID) {
+    return layout[ID];
 }
 
-const Hex& Map::getConstHexByID(const unsigned int& ID) const {
-    assert(layout.size() > ID && "hex ID doesn't exist");
-    return layout.at(ID);
+const Hex& Map::getHexByID(const unsigned int ID) const {
+    return layout[ID];
 }
 
-const bool Map::isHexAvailable(const unsigned int& ID) noexcept {
-    return !getConstHexByID(ID).isForbidden();
+const Hex& Map::getHexByPosOff(const CoordAxial& p) const {
+    return getHexByID(hexPosOffToID(p));
+}
+
+const bool Map::isHexAvailable(const unsigned int ID) noexcept {
+    return !getHexByID(ID).isType(HexType::TileAttribute_Forbidden);;
 }
 
 const Array2D& Map::getLayout() const noexcept {
+    return layout;
+}
+
+
+Array2D& Map::getLayout() noexcept {
     return layout;
 }

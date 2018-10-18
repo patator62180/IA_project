@@ -5,6 +5,8 @@
 #include "MyBotLogic/MyBotLogic.h"
 
 #include <functional>
+#include <chrono>
+
 
 #include "Logger.h"
 
@@ -15,16 +17,13 @@ private:
 
     Logger logger;
 public:
-    //void test(std::function<void()> f) {
-    //    try
-    //    {
-    //        f();
-    //    }
-    //    catch (const std::exception &exc)
-    //    {
-    //        BOT_LOGIC_LOG(logger, exc.what(), true);
-    //    }
-    //};
+    //template <class F, class ...Args>
+    //auto chrono(F f, Args &&... args) {
+    //    auto pre = high_resolution_clock::now();
+    //    res = f(std::forward<Args>(args)...)
+    //    auto post = high_resolution_clock::now();
+    //    return pair{ res, post - pre; }
+    //}
 
     void Log(const std::string& message) noexcept;
     void InitLogger(const std::string);

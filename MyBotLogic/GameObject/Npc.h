@@ -19,23 +19,18 @@ struct Npc
     unsigned int movementRange;
     bool omniscient;
 
-    Npc(const unsigned int& ID, const unsigned int& hID, const unsigned int& vr, const unsigned int& movementRange, const bool& omniscient)
-        : ID{ ID }, hexID{ hID }, visionRange{ vr }, movementRange{ movementRange +1 }, omniscient{ omniscient }
+    Npc() = default;
+    Npc(const unsigned int ID, const unsigned int hID, const unsigned int vr, const unsigned int mr, const bool& omniscient)
+        : ID{ ID }, hexID{ hID }, visionRange{ vr }, movementRange{ mr }, omniscient{ omniscient }
     {}
     ~Npc() = default;
 
     friend std::ostream& operator<<(std::ostream&, Npc);
-
 };
 
 inline std::ostream& operator<<(std::ostream &os, Npc n)
 {
-    os << "Id:" << n.ID << ' ';
-
-    //for (auto movement : n.pathRecord)
-    //    os << movement.direction << ':' << movement.toHexID << ' ';
-
-    return os << std::endl;
+    return os << "Id:" << n.ID << " HexID:" << n.hexID;
 }
 
 #endif // #ifndef NPC_H
