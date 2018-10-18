@@ -29,6 +29,9 @@ void GameManager::Init(const LevelInfo& levelInfo)
     map.Update(turnInfo);
     bb.Init(map.getLayout().size());
     AIhelper = { levelInfo };
+	bt = BehaviourTree();
+
+
 }
 
 void GameManager::Update(const TurnInfo& turnInfo)

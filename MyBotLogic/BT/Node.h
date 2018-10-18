@@ -7,7 +7,11 @@ using namespace std;
 
 enum NodeState { SUCCESS, FAIL, RUNNING };
 
+class NodeException {};
+
 struct Node {
 	vector<Node*> children;
-	virtual NodeState run(unsigned int npcId) = 0;
+	virtual NodeState run(unsigned int npcId) {
+			throw NodeException();
+			return FAIL; };
 };

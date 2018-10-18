@@ -9,11 +9,11 @@ class Deplacement : public Node {
 
 public:
 	Deplacement(Tile::ETilePosition _dir) : dir(_dir) {};
-	NodeState run(unsigned int npcId) {
-		std::map<unsigned int, Movement>&  turnMove = GameManager::getInstance().getTurnMove();
+	virtual NodeState run(unsigned int npcId) {
+		std::map<unsigned int, Movement>& turnMove = GameManager::getInstance().getTurnMove();
 		Movement mv = Movement();
 		mv.direction = dir;
-		turnMove[dir];
+		turnMove[npcId] = mv;
 		return SUCCESS;
 	}
 };

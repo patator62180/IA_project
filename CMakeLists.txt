@@ -51,6 +51,7 @@ SET( AIBOT_HEADERS
 	MyBotLogic/Algorithm/GoalState.h
 	MyBotLogic/Algorithm/ExploreState.h
 	MyBotLogic/Algorithm/Record.h
+	MyBotLogic/Algorithm/BehaviourTree.h
 	
 	MyBotLogic/GameObject/Map.h
 	MyBotLogic/GameObject/Npc.h
@@ -62,6 +63,15 @@ SET( AIBOT_HEADERS
 	MyBotLogic/Utils/DebugHelper.h
 	MyBotLogic/Utils/PathHelper.h
 	MyBotLogic/Utils/Singleton.h
+
+	MyBotLogic/BT/Node.h
+	MyBotLogic/BT/Selector.h
+	MyBotLogic/BT/Sequencer.h
+
+	MyBotLogic/BT/Leaf/Deplacement.h
+	MyBotLogic/BT/Leaf/NbTiles.h 
+	
+
 
 )
 
@@ -82,6 +92,7 @@ SET( AIBOT_SRC
 	MyBotLogic/Algorithm/BlackBoard.cpp
 	MyBotLogic/Algorithm/GoalState.cpp
 	MyBotLogic/Algorithm/ExploreState.cpp
+	MyBotLogic/Algorithm/BehaviourTree.cpp
 	
 	MyBotLogic/GameObject/Map.cpp
 	

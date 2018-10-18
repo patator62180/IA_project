@@ -8,7 +8,7 @@ class NbTiles : public Node {
 	NbTiles() = delete;
 public:
 	NbTiles(int _nbTiles) : nbTiles(_nbTiles) {};
-	NodeState run(unsigned int npcId) {
+	virtual NodeState run(unsigned int npcId) {
 		GameManager& gm = GameManager::getInstance();
 		if (gm.getMap().getLayout().size() == nbTiles)
 			return SUCCESS;

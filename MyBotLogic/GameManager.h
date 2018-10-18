@@ -6,9 +6,12 @@
 #include "GameObject\Map.h"
 #include "GameObject\Npc.h"
 #include "Algorithm/BlackBoard.h"
+#include "Algorithm/BehaviourTree.h"
 
 #include "LevelInfo.h"
 #include "TurnInfo.h"
+#include "BT/Node.h"
+#include "BT/Selector.h"
 
 #include <map>
 
@@ -25,6 +28,7 @@ private:
 	std::map<unsigned int, Movement> turnMove;
 
 public:
+	BehaviourTree bt;
     static GameManager& getInstance();
 
     void Init(const LevelInfo&);
