@@ -2,17 +2,23 @@
 
 #include "GameManager.h"
 #include "Utils/DebugHelper.h"
+#include "Algorithm/BehaviourTree.h"
 
 #include <ostream>
 #include <algorithm>
 #include <cassert>
 #include <sstream>
 
+map<unsigned int, NpcStateInfo> AIHelper::npcsInfo = map<unsigned int, NpcStateInfo>();
+
 void AIHelper::Init(const LevelInfo& levelInfo)
 {
     blackBoard.Init(levelInfo.rowCount * levelInfo.colCount);
+	// L'état des Npc qui sera lié aux behavior tree
+	BehaviourTree bt = BehaviourTree();
 
-    for (auto npc : levelInfo.npcs)
+	for (auto npc : levelInfo.npcs)
+
         stateMachine.npcsStateInfo.insert( { npc.first, Npc{
                 npc.second.npcID,
                 npc.second.tileID,

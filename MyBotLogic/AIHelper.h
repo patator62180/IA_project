@@ -16,6 +16,7 @@ private:
 
 public:
     BlackBoard blackBoard;
+	static std::map<unsigned int, NpcStateInfo> npcsInfo;
 
     AIHelper() = default;
     void Init(const LevelInfo&);
