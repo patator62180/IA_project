@@ -13,6 +13,7 @@ struct NpcStateInfo {
     State objective = State::Init;
     std::vector<Movement> pathRecord;
     unsigned int objectiveHexID;
+    unsigned int floodID;
 
     NpcStateInfo() = default;
     NpcStateInfo(Npc&);

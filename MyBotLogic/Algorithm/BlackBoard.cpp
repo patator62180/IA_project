@@ -11,7 +11,6 @@
 
 void BlackBoard::Init(const size_t size, const size_t npcCount) noexcept
 {
-    mergedPath = static_cast<unsigned int>(npcCount+1);
     data.resize(DataType::COUNT);
     for(auto& d : data)
         d.resize(size);
@@ -22,7 +21,7 @@ void BlackBoard::UpdateNpc(NpcStateInfo& stateInfo, const std::set<unsigned int>
     data[DataType::Flood][stateInfo.npc.hexID] = stateInfo.npc.ID;
 
     updateScoreData(seenHexesID);
-    updateFloodData(stateInfo.npc);
+    updateFloodData(stateInfo);
 }
 
 inline bool BlackBoard::isUninitialized(const DataType dataIndex, const unsigned int hexID) const noexcept {
@@ -38,7 +37,7 @@ void BlackBoard::AddGoal(const unsigned int goalHexID) noexcept {
 }
 
 bool BlackBoard::isGoalReachable(const unsigned int npcID, const unsigned int goalHexID) {
-    return data[DataType::Flood][goalHexID] == npcID || data[DataType::Flood][goalHexID] == mergedPath;
+    return data[DataType::Flood][goalHexID] == npcID;
 }
 
 void BlackBoard::setNpcObjectiveHexID(NpcStateInfo& npcInfo) {
@@ -52,7 +51,7 @@ void BlackBoard::setNpcObjectiveHexID(NpcStateInfo& npcInfo) {
 
 bool BlackBoard::findClosestGoal(NpcStateInfo& npcInfo) {
     auto bestGoalIter = std::find_if(begin(goals), end(goals), [&npcInfo, this](const Goal& g) {
-        return g.available.first && isGoalReachable(npcInfo.npc.ID, g.hexID);
+        return g.available.first && isGoalReachable(npcInfo.floodID, g.hexID);
     });
 
     if (bestGoalIter != end(goals)) {
@@ -87,41 +86,36 @@ void BlackBoard::updateScoreData(const std::set<unsigned int>& seenHexesID)
         }
 }
 
-void BlackBoard::updateFloodData(const Npc& npc)
+void BlackBoard::updateFloodData(NpcStateInfo& npcInfo)
 {
     auto map = GameManager::getInstance().getMap();
-    
-    std::vector<unsigned int> hexIDInRadius{ npc.hexID };
-    std::vector<unsigned int> temp;
+    auto bb = GameManager::getInstance().getAIHelper().blackBoard;
     unsigned int npcIDToFuse = 0;
 
-    for (unsigned int i = 0; i < npc.visionRange; ++i)
-    {
-        temp.clear();
-        for (auto hexID : hexIDInRadius) {
-            auto hex = map.getHexByID(hexID);
+    std::deque<unsigned int> hexIDToDo{ npcInfo.npc.hexID };
 
-            for (auto edge : hex.edges) {
-                if (!(edge.isBlocked))
-                {
-                    if (isUninitialized(DataType::Flood, edge.leadsToHexID)) {
-                        data[DataType::Flood][edge.leadsToHexID] = npc.ID;
-                        temp.emplace_back(edge.leadsToHexID);
-                    }
-                    else if (isFloodedByAnotherNpc(edge.leadsToHexID, npc.ID))
-                        npcIDToFuse = data[DataType::Flood][edge.leadsToHexID];                  
+    while (!hexIDToDo.empty()) {
+        auto hex = map.getHexByID(hexIDToDo.front());
+        hexIDToDo.pop_front();
+
+        for (auto edge : hex.edges) {
+            if (!(edge.isBlocked))
+            {
+                if (isUninitialized(DataType::Flood, edge.leadsToHexID)) {
+                    data[DataType::Flood][edge.leadsToHexID] = npcInfo.floodID;
+                    hexIDToDo.emplace_back(edge.leadsToHexID);
                 }
+                else if (isFloodedByAnotherNpc(edge.leadsToHexID, npcInfo.npc.ID))
+                    npcIDToFuse = data[DataType::Flood][edge.leadsToHexID];
             }
         }
-        hexIDInRadius.swap(temp);
     }
 
     if (npcIDToFuse > 0) {
-        std::replace_if(begin(data[DataType::Flood]), end(data[DataType::Flood]), [&npc, &npcIDToFuse](const unsigned int& val){
-            return val == npc.ID || val == npcIDToFuse;
-        }, mergedPath);
-
-   //     --mergedPath;
+        std::replace_if(begin(data[DataType::Flood]), end(data[DataType::Flood]), [&npcInfo](const unsigned int& val){
+            return val == npcInfo.npc.ID;
+        }, npcIDToFuse);
+        npcInfo.floodID = npcIDToFuse;
     }
 }
 

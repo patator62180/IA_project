@@ -28,7 +28,6 @@ class BlackBoard
 private:
     static const unsigned int UNINITIALIZED = 0;
     static const unsigned int BASE_INFLUENCE_SCORE = 100;
-    unsigned int mergedPath;
 
     Goals goals;
 public:
@@ -53,7 +52,7 @@ public:
 private:
     //bool hasBeenVisited(const DataType, const unsigned int) const;
     void updateScoreData(const std::set<unsigned int>&);
-    void updateFloodData(const Npc&);
+    void updateFloodData(NpcStateInfo&);
 
     bool findClosestGoal(NpcStateInfo&);
     bool isFloodedByAnotherNpc(const unsigned int, const unsigned int) const noexcept;

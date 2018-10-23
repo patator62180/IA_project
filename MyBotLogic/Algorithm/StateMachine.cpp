@@ -9,7 +9,9 @@
 
 NpcStateInfo::NpcStateInfo(Npc& npc)
     :npc{ std::move(npc) }
-{}
+{
+    floodID = npc.ID;
+}
 
 Movement StateMachine::Update(Npc& npc)
 {
