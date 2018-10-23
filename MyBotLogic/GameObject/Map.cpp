@@ -51,7 +51,7 @@ void Map::updateHexes(const TurnInfo& ti)
             if (!hex.areAllEdgesBlocked()) {
                 switch (hex.type) {
                 case HexType::TileAttribute_Goal:
-                    GameManager::getInstance().getAIHelper().blackBoard.UpdateGoal(hex.ID);
+                    GameManager::getInstance().getAIHelper().blackBoard.AddGoal(hex.ID);
                     break;
 
                 case HexType::TileAttribute_Forbidden:

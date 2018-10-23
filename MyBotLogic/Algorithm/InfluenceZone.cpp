@@ -9,38 +9,36 @@
 #include <cassert>
 #include <algorithm>
 
-void InfluenceZone::createZone(const std::set<unsigned int>& seenHexesID)
+void InfluenceZone::findHighInfluence(const std::set<unsigned int>& seenHexesID)
 {
     data.clear();
     auto map = GameManager::getInstance().getMap();
-    unsigned int influence = 0;
+    auto bb = GameManager::getInstance().getAIHelper().blackBoard;
 
     for (auto ID : seenHexesID) {
         auto hex = map.getHexByID(ID);
 
-        switch (hex.type) {
+        if (bb.isUninitialized(DataType::Score, hex.ID)) {
+            switch (hex.type) {
 
-        case HexType::TileAttribute_Default:
-            influence = hex.EdgeCountType(EdgeType::ObjectType_Window);
-            break;
+            case HexType::TileAttribute_Default:
+                data.push_back({ ID, hex.EdgeCountType(EdgeType::ObjectType_Window) });
+                    break;
 
-        case HexType::TileAttribute_Goal:
-            influence = BlackBoard::GOAL_SCORE;
-            GameManager::getInstance().getAIHelper().blackBoard.UpdateGoal(hex.ID);
-            break;
+            case HexType::TileAttribute_Goal:
+                data.push_back({ ID, BlackBoard::GOAL_SCORE });
+                    break;
 
-        default:
-            break;
+            default:
+                break;
+            }
         }
-
-        if (influence > 0)
-            data.push_back({ ID, influence });   
     }
 }
 
 void InfluenceZone::Update(const std::set<unsigned int>& seenHexesID) {
     data.clear();
-    createZone(seenHexesID);
+    findHighInfluence(seenHexesID);
 }
 
 
@@ -55,7 +53,7 @@ InfluenceHex InfluenceZone::consumeBestInfluence() {
         result = *maxIter;
 
         //if there is an npc on that hex or hex has been visited, find the next best hex
-        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID) || !GameManager::getInstance().getAIHelper().blackBoard.isUnvisited(result.hexID)) {
+        if (GameManager::getInstance().getAIHelper().isHexIDOccupied(result.hexID)) {
             data.erase(maxIter);
             return consumeBestInfluence();
         }

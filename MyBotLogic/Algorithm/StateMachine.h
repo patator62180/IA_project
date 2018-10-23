@@ -2,19 +2,17 @@
 #define STATE_MACHINE_H
 
 #include "../GameObject/Npc.h"
-#include "InfluenceZone.h"
 
 #include <vector>
 #include <map>
 
-enum State { Init, Explore, ExploreOriented, Blocked, OnGoal };
+enum State { Init, FollowPath, Blocked, OnGoal };
 
 struct NpcStateInfo {
     Npc npc;
     State objective = State::Init;
     std::vector<Movement> pathRecord;
-    InfluenceZone influenceZone;
-    InfluenceHex currentHighest;
+    unsigned int objectiveHexID;
 
     NpcStateInfo() = default;
     NpcStateInfo(Npc&);

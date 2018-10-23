@@ -12,7 +12,6 @@ class AStar
 {
 public:
     static void SetBestPath(NpcStateInfo&) noexcept;
-    static void SetNearestUnvisited(NpcStateInfo&) noexcept;
 
 private:
     static PathRecord buildPath(const Record*) noexcept;

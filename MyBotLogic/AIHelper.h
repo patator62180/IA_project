@@ -12,7 +12,6 @@ class AIHelper
 {
 private:
     StateMachine stateMachine;
-    std::set<unsigned int> npcsCurrentHexID;
 
 public:
     BlackBoard blackBoard;
@@ -23,10 +22,10 @@ public:
     void Update(const TurnInfo&);
     void FillActionList(std::vector<Action*>&);
 
-    bool isHexIDOccupied(const unsigned int);
-    bool TryAddNpcCurrentHexID(NpcStateInfo&);
+    //bool isHexIDOccupied(const unsigned int);
+    //bool TryAddNpcCurrentHexID(NpcStateInfo&);
 
-    const std::set<unsigned int>& getNpcsCurrentHexID() noexcept;
+    //const std::set<unsigned int>& getNpcsCurrentHexID() noexcept;
 
     ~AIHelper() = default;
 };

@@ -31,6 +31,6 @@ public:
     InfluenceHex consumeBestInfluence();
 
 private:
-    void createZone(const std::set<unsigned int>&);
+    void findHighInfluence(const std::set<unsigned int>&);
 };
 #endif // !INFLUENCE_ZONE_H
