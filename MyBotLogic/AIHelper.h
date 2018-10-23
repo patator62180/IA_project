@@ -5,6 +5,7 @@
 #include "TurnInfo.h"
 #include "Algorithm/StateMachine.h"
 #include "Algorithm/BlackBoard.h"
+#include "Algorithm/BehaviourTree.h"
 
 #include <set>
 
@@ -17,6 +18,7 @@ private:
 public:
     BlackBoard blackBoard;
 	static std::map<unsigned int, NpcStateInfo> npcsInfo;
+	BehaviourTree bt;
 
     AIHelper() = default;
     void Init(const LevelInfo&);

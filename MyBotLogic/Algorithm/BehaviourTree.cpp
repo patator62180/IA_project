@@ -10,11 +10,14 @@ BehaviourTree::BehaviourTree() {
 
 	NbTiles* nbTiles = new NbTiles(9);
 	Deplacement* dep1 = new Deplacement(Tile::NW);
-	//Deplacement* dep2 = new Deplacement(Tile::SW);
-	//Sequencer* seq = new Sequencer();
-	//seq->children.push_back(nbTiles);
-	//seq->children.push_back(dep1);
-	//root.children.push_back(seq);
-	//root.children.push_back(dep2);
+	Deplacement* dep2 = new Deplacement(Tile::SW);
+	Sequencer* seq = new Sequencer();
+	seq->children.push_back(nbTiles);
+	seq->children.push_back(dep1);
+
+	root = new Selector();
+
+	root->children.push_back(seq);
+	root->children.push_back(dep2);
 
 }

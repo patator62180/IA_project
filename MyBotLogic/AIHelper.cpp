@@ -15,7 +15,19 @@ void AIHelper::Init(const LevelInfo& levelInfo)
 {
     blackBoard.Init(levelInfo.rowCount * levelInfo.colCount);
 	// L'état des Npc qui sera lié aux behavior tree
-	BehaviourTree bt = BehaviourTree();
+	//bt = BehaviourTree();
+
+	for (auto npc : levelInfo.npcs) {
+
+			npcsInfo.insert({ npc.first, Npc{
+			npc.second.npcID,
+			npc.second.tileID,
+			npc.second.visionRange,
+			npc.second.movementRange,
+			npc.second.omniscient
+			} });
+
+	}
 
 	for (auto npc : levelInfo.npcs)
 
@@ -51,16 +63,34 @@ void AIHelper::Update(const TurnInfo& turnInfo) {
 
 void AIHelper::FillActionList(std::vector<Action*>& actionList)
 {
-    for (auto& pair : stateMachine.npcsStateInfo)
-    {
-        Movement next = stateMachine.Update(pair.second.npc);
 
-        actionList.push_back(
-            new Move(pair.second.npc.ID, next.direction)
-        );
+	if (GameManager::useBehaviourTree) {
+	
+		for (auto& npcInfo : npcsInfo) {
 
-        pair.second.npc.hexID = next.toHexID;
-    }
+			bt.root->run(npcInfo.first);
+			actionList.push_back(
+			new Move(npcInfo.first, npcInfo.second.pathRecord.back().direction));
+
+			npcInfo.second.pathRecord.pop_back();
+
+		}
+
+	}
+	else {
+
+		for (auto& pair : stateMachine.npcsStateInfo)
+		{
+			Movement next = stateMachine.Update(pair.second.npc);
+
+			actionList.push_back(
+				new Move(pair.second.npc.ID, next.direction)
+			);
+
+			pair.second.npc.hexID = next.toHexID;
+		}
+
+	}
 }
 
 bool AIHelper::TryAddNpcCurrentHexID(NpcStateInfo& npcStateInfo)

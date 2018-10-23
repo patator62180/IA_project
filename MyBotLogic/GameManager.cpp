@@ -6,6 +6,7 @@
 
 class NpcWithoutObjective {};
 
+
 GameManager& GameManager::getInstance() {
     static GameManager instance;
     return instance;

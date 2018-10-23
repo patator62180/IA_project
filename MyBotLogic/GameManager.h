@@ -18,6 +18,9 @@ private:
     Map map;
     AIHelper AIhelper;
 public:
+
+	static const bool useBehaviourTree = true;
+
     static GameManager& getInstance();
 
     void Init(const LevelInfo&);
